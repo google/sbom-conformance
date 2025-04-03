@@ -12,7 +12,7 @@ The `BaseChecker` does the analysis of SBOMs. To create one with the Google Inte
 
 ```go
 import (
-	"github.com/AdamKorcz/sbom-conformance/pkg/checkers/base"
+	"github.com/google/sbom-conformance/pkg/checkers/base"
 )
 
 checker := base.NewChecker(base.WithGoogleChecker(),
