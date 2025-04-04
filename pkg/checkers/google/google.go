@@ -141,5 +141,9 @@ func (googleChecker *GoogleChecker) SpecName() string {
 }
 
 func (googleChecker *GoogleChecker) CheckPackages(doc *v23.Document) {
-	googleChecker.PkgResults = util.RunPkgLevelChecks(doc, googleChecker.PkgLevelChecks, googleChecker.Name)
+	googleChecker.PkgResults = util.RunPkgLevelChecks(
+		doc,
+		googleChecker.PkgLevelChecks,
+		googleChecker.Name,
+	)
 }

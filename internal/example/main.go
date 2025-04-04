@@ -30,21 +30,45 @@ import (
 
 //nolint:all
 var (
-	flagSbom          = flag.String("sbom", "testdata/sboms/simple.json", "The path to the SBOM file to check. The SBOM can be in JSON, YAML or Tagvalue format.")
-	flagSpec          = flag.String("specs", "all", "The specs to check. Options are: 'google', 'eo', 'spdx', 'all' (default).")
-	flagFocus         = flag.String("focus", "package", "The focus for the output. 'package' display each failing package and the errors it has. 'error' display a list of the found issues and the packages that has that issue.")
-	flagOutput        = flag.String("output", "text", "The output format. Options are 'text' or 'json'.")
-	flagSpecSummary   = flag.String("spec-summary", "", "View summary of a particular spec. Same options as 'specs' flag")
+	flagSbom = flag.String(
+		"sbom",
+		"testdata/sboms/simple.json",
+		"The path to the SBOM file to check. The SBOM can be in JSON, YAML or Tagvalue format.",
+	)
+	flagSpec = flag.String(
+		"specs",
+		"all",
+		"The specs to check. Options are: 'google', 'eo', 'spdx', 'all' (default).",
+	)
+	flagFocus = flag.String(
+		"focus",
+		"package",
+		"The focus for the output. 'package' display each failing package and the errors it has. 'error' display a list of the found issues and the packages that has that issue.",
+	)
+	flagOutput = flag.String(
+		"output",
+		"text",
+		"The output format. Options are 'text' or 'json'.",
+	)
+	flagSpecSummary = flag.String(
+		"spec-summary",
+		"",
+		"View summary of a particular spec. Same options as 'specs' flag",
+	)
 	flagTextSummary   = flag.Bool("text-summary", true, "Set to true to get a textual summary")
-	flagGetAllResults = flag.Bool("get-all-results", false, "Enable to get all results in JSON format")
-	flagGetChecks     = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
-	validFocus        = []string{"package", "error"}
-	validOutput       = []string{"text", "json"}
-	validSpecs        = []string{"google", "eo", "spdx", "all"}
-	greenCheckHex, _  = strconv.ParseInt("0x00002705", 0, 32)
-	greenCheck        = html.UnescapeString(fmt.Sprint(rune(greenCheckHex)))
-	redCrossHex, _    = strconv.ParseInt("0x0000274C", 0, 32)
-	redCross          = html.UnescapeString(fmt.Sprint(rune(redCrossHex)))
+	flagGetAllResults = flag.Bool(
+		"get-all-results",
+		false,
+		"Enable to get all results in JSON format",
+	)
+	flagGetChecks    = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
+	validFocus       = []string{"package", "error"}
+	validOutput      = []string{"text", "json"}
+	validSpecs       = []string{"google", "eo", "spdx", "all"}
+	greenCheckHex, _ = strconv.ParseInt("0x00002705", 0, 32)
+	greenCheck       = html.UnescapeString(fmt.Sprint(rune(greenCheckHex)))
+	redCrossHex, _   = strconv.ParseInt("0x0000274C", 0, 32)
+	redCross         = html.UnescapeString(fmt.Sprint(rune(redCrossHex)))
 )
 
 //nolint:all
@@ -211,10 +235,10 @@ func main() {
 					conformant = fmt.Sprintf("NOT conformant %s", redCross)
 				}
 				specsSummary.WriteString(fmt.Sprintf("%s: %d/%d checks passed | %s\n",
-													specName,
-													cir.PassedChecks,
-													cir.TotalChecks,
-													conformant))
+					specName,
+					cir.PassedChecks,
+					cir.TotalChecks,
+					conformant))
 			}
 		} else {
 			for _, chosenSpec := range specsForSummary {
@@ -227,10 +251,10 @@ func main() {
 							conformant = fmt.Sprintf("NOT conformant %s", redCross)
 						}
 						specsSummary.WriteString(fmt.Sprintf("%s: %d/%d checks passed | %s\n",
-															specName,
-															cir.PassedChecks,
-															cir.TotalChecks,
-															conformant))
+							specName,
+							cir.PassedChecks,
+							cir.TotalChecks,
+							conformant))
 					}
 				}
 			}

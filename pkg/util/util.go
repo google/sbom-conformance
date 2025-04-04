@@ -57,7 +57,10 @@ func DeduplicateIssues(issues []*types.NonConformantField) []*DeduplicatedIssue 
 	return deduplicatedIssues
 }
 
-func alreadyDeduplicated(issue *types.NonConformantField, deduplicatedIssues []*DeduplicatedIssue) bool {
+func alreadyDeduplicated(
+	issue *types.NonConformantField,
+	deduplicatedIssues []*DeduplicatedIssue,
+) bool {
 	for _, iss := range deduplicatedIssues {
 		if iss.ErrorMessage == issue.Error.ErrorMsg {
 			return true
@@ -66,7 +69,10 @@ func alreadyDeduplicated(issue *types.NonConformantField, deduplicatedIssues []*
 	return false
 }
 
-func issueIsReportedBySpecs(issue *types.NonConformantField, issues []*types.NonConformantField) []string {
+func issueIsReportedBySpecs(
+	issue *types.NonConformantField,
+	issues []*types.NonConformantField,
+) []string {
 	specs := make([]string, 0)
 	for _, i := range issues {
 		if i.Error.ErrorMsg == issue.Error.ErrorMsg {
@@ -101,7 +107,11 @@ func getPackageID(pack *v23.Package) string {
 	return string(pack.PackageSPDXIdentifier)
 }
 
-func RunPkgLevelChecks(doc *v23.Document, checks []*types.PackageLevelCheck, specName string) []*types.PkgResult {
+func RunPkgLevelChecks(
+	doc *v23.Document,
+	checks []*types.PackageLevelCheck,
+	specName string,
+) []*types.PkgResult {
 	pkgResults := make([]*types.PkgResult, 0)
 
 	for _, pack := range doc.Packages {
