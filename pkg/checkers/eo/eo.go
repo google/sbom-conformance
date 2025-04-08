@@ -66,8 +66,8 @@ func (eoChecker *EOChecker) InitChecks() {
 			Impl: MustHaveValidVersion,
 		},
 		{
-			Name: "Check that 'Google' is spelled correctly if it is the supplier of packages",
-			Impl: CheckGoogleSpellingInSupplier,
+			Name: "Check that the package has a supplier",
+			Impl: MustHaveSupplier,
 		},
 		{
 			Name: "Check that SBOM packages have external references",

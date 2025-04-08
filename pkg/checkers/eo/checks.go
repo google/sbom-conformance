@@ -38,6 +38,19 @@ func checkRelationshipsFields(
 	return issues
 }
 
+func MustHaveSupplier(
+	sbomPack *v23.Package,
+	spec, checkName string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if sbomPack.PackageSupplier == nil || sbomPack.PackageSupplier.Supplier == "" {
+		issue := missingPackageSupplier(spec)
+		issue.CheckName = checkName
+		issues = append(issues, issue)
+	}
+	return issues
+}
+
 func MustHaveValidVersion(
 	sbomPack *v23.Package,
 	spec, checkName string,
@@ -94,4 +107,15 @@ func MustHaveExternalReferences(
 		issues = append(issues, issue)
 	}
 	return issues
+}
+
+func missingPackageSupplier(spec string) *types.NonConformantField {
+	e := "The supplier field is missing"
+	return &types.NonConformantField{
+		Error: &types.FieldError{
+			ErrorType: "missingField",
+			ErrorMsg:  e,
+		},
+		ReportedBySpec: []string{spec},
+	}
 }
