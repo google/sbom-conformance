@@ -2,6 +2,9 @@
 
 A tool to check the conformance of SBOMs compared to Googles internal spec, the EO requirements and the SPDX requirements.
 
+> [!IMPORTANT]
+>  This library is being developed. It's not recommended to use it yet.
+
 ## How to use
 
 sbom-conformance is a library. See below how to use it.
@@ -87,6 +90,19 @@ results.ChecksInRun
 ## main.go
 
 sbom-conformance is currently mainly intended to be used as a library. We have a `main.go` that is in WIP. It may not support all features in sbom-conformance, but if you wish to use sbom-conformance as a standalone CLI tool, we accept pull requests for our `mail.go` file.
+
+## Supported Specifications
+
+> [!IMPORTANT]
+>  This documentation is being developed and is not complete. 
+
+### NTIA Minimum Elements
+name: `EO`
+
+A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf.
+
+#### Supplier Name
+This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) is not missing or empty.
 
 ## Disclaimer
 This is not an officially supported Google product. This project is not
