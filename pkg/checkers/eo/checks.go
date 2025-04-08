@@ -15,8 +15,6 @@
 package eo
 
 import (
-	"strings"
-
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
@@ -63,35 +61,6 @@ func MustHaveValidVersion(
 		issues = append(issues, issue)
 	}
 	return issues
-}
-
-func CheckGoogleSpellingInSupplier(
-	sbomPack *v23.Package,
-	spec, checkName string,
-) []*types.NonConformantField {
-	issues := make([]*types.NonConformantField, 0)
-	if sbomPack.PackageOriginator != nil {
-		if strings.ToLower(sbomPack.PackageOriginator.Originator) == "google" {
-			issue := wrongPackageOriginator(spec)
-			issue.CheckName = checkName
-			issues = append(issues, issue)
-		}
-	}
-	return issues
-}
-
-func wrongPackageOriginator(
-	spec string,
-) *types.NonConformantField {
-	e := "If the package originates from Google, " +
-		"the 'Package Originator' should be 'Google LLC'."
-	return &types.NonConformantField{
-		Error: &types.FieldError{
-			ErrorType: "formatError",
-			ErrorMsg:  e,
-		},
-		ReportedBySpec: []string{spec},
-	}
 }
 
 func MustHaveExternalReferences(
