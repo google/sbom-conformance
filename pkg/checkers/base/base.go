@@ -165,7 +165,10 @@ func (checker *BaseChecker) ResetResults(spec SpecChecker) {
 	checker.PkgResults = make([]*types.PkgResult, 0)
 }
 
-func (checker *BaseChecker) countFailedPkgPercentage(checkName string, pkgResults []*types.PkgResult) float32 {
+func (checker *BaseChecker) countFailedPkgPercentage(
+	checkName string,
+	pkgResults []*types.PkgResult,
+) float32 {
 	numberOfFailedPkgs := 0
 	for _, issue := range pkgResults {
 		for _, confError := range issue.Errors {
@@ -351,8 +354,12 @@ func (checker *BaseChecker) isFailedTopLevelCheck(checkName string) bool {
 func (checker *BaseChecker) TextSummary() string {
 	failedSBOMackages := checker.NumberOfSBOMPackages() - checker.NumberOfCompliantPackages()
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Analyzed SBOM package with %d packages. ", checker.NumberOfSBOMPackages()))
-	sb.WriteString(fmt.Sprintf("%d of these packages failed the conformance checks.\n", failedSBOMackages))
+	sb.WriteString(
+		fmt.Sprintf("Analyzed SBOM package with %d packages. ", checker.NumberOfSBOMPackages()),
+	)
+	sb.WriteString(
+		fmt.Sprintf("%d of these packages failed the conformance checks.\n", failedSBOMackages),
+	)
 	sb.WriteString("\nTop-level conformance issues:\n")
 	topLevelIssues := make([]string, 0)
 	for _, issue := range checker.TopLevelResults {

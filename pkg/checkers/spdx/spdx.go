@@ -139,5 +139,9 @@ func (spdxChecker *SPDXChecker) GetPackages() []*types.PkgResult {
 }
 
 func (spdxChecker *SPDXChecker) CheckPackages(doc *v23.Document) {
-	spdxChecker.PkgResults = util.RunPkgLevelChecks(doc, spdxChecker.PkgLevelChecks, spdxChecker.Name)
+	spdxChecker.PkgResults = util.RunPkgLevelChecks(
+		doc,
+		spdxChecker.PkgLevelChecks,
+		spdxChecker.Name,
+	)
 }
