@@ -53,7 +53,8 @@
             "licenseConcluded": "some license",
             "licenseDeclared": "NOASSERTION",
             "copyrightText": "NOASSERTION",
-            "versionInfo": "v3"
+            "versionInfo": "v3",
+            "supplier": "Organization: bar"
         }
 
     ],

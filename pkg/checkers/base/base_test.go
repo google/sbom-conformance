@@ -229,7 +229,7 @@ func TestEOChecker(t *testing.T) {
 		"Check that the SBOMs packages are correctly formatted",
 		"Check that SBOM packages have a name",
 		"Check that SBOM packages have a valid version",
-		"Check that 'Google' is spelled correctly if it is the supplier of packages",
+		"Check that the package has a supplier",
 		"Check that SBOM packages have external references",
 	}
 
@@ -251,6 +251,7 @@ Creator organization is Some Other Company, but should always be 'Google LLC'.. 
 
 Conformance issues in packages:
 1/4 package failed: has no PackageName field
+3/4 packages failed: The supplier field is missing
 4/4 packages failed: has no PackageExternalReferences field
 `
 
@@ -275,8 +276,8 @@ Conformance issues in packages:
 		t.Errorf("The 'EO' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["EO"].Conformant)
 	}
-	if results.Summary.SpecSummaries["EO"].PassedChecks != 7 {
-		t.Errorf("The 'EO' spec summary should be PassedChecks=7 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["EO"].PassedChecks != 6 {
+		t.Errorf("The 'EO' spec summary should be PassedChecks=6 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["EO"].PassedChecks)
 	}
 	if results.Summary.SpecSummaries["EO"].TotalChecks != len(expectedCheckNames) {
@@ -294,16 +295,25 @@ Conformance issues in packages:
 	if packageName != "Some Package" {
 		t.Errorf("The first package should be named 'Some Package' but was named '%s'", packageName)
 	}
-	if len(results.PkgResults[0].Errors) != 1 {
-		t.Error("There should only be one error")
+	if len(results.PkgResults[0].Errors) != 2 {
+		t.Error("There should only be two errors")
 	}
 	if results.PkgResults[0].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[0].Errors[0].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[0].Errors[0].Error.ErrorMsg != "The supplier field is missing" {
+		t.Errorf("Should be 'The supplier field is missing' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[0].Errors[0].ReportedBySpec, []string{"EO"}) {
+		t.Errorf("The issue should be reported by EO")
+	}
+	if results.PkgResults[0].Errors[1].Error.ErrorType != "missingField" {
+		t.Errorf("Should be missingField ErrorType")
+	}
+	if results.PkgResults[0].Errors[1].Error.ErrorMsg != "has no PackageExternalReferences field" {
+		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	}
+	if !slices.Equal(results.PkgResults[0].Errors[1].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
 	}
 
@@ -312,8 +322,8 @@ Conformance issues in packages:
 	if results.PkgResults[1].Package.Name != "" {
 		t.Errorf("The second package should be named '' but was named %s", packageName)
 	}
-	if len(results.PkgResults[1].Errors) != 2 {
-		t.Error("There should be two errors")
+	if len(results.PkgResults[1].Errors) != 3 {
+		t.Error("There should be three errors")
 	}
 	if results.PkgResults[1].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
@@ -327,10 +337,19 @@ Conformance issues in packages:
 	if results.PkgResults[1].Errors[1].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "The supplier field is missing" {
+		t.Errorf("Should be 'The supplier field is missing' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[1].Errors[1].ReportedBySpec, []string{"EO"}) {
+		t.Errorf("The issue should be reported by EO")
+	}
+	if results.PkgResults[1].Errors[2].Error.ErrorType != "missingField" {
+		t.Errorf("Should be missingField ErrorType")
+	}
+	if results.PkgResults[1].Errors[2].Error.ErrorMsg != "has no PackageExternalReferences field" {
+		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	}
+	if !slices.Equal(results.PkgResults[1].Errors[2].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
 	}
 
@@ -339,16 +358,25 @@ Conformance issues in packages:
 	if results.PkgResults[2].Package.Name != "another package" {
 		t.Errorf("The third package should be named 'another package' but was named '%s'", packageName)
 	}
-	if len(results.PkgResults[2].Errors) != 1 {
+	if len(results.PkgResults[2].Errors) != 2 {
 		t.Error("There should be two errors")
 	}
 	if results.PkgResults[2].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "The supplier field is missing" {
+		t.Errorf("Should be 'The supplier field is missing' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[2].Errors[0].ReportedBySpec, []string{"EO"}) {
+		t.Errorf("The issue should be reported by EO")
+	}
+	if results.PkgResults[2].Errors[1].Error.ErrorType != "missingField" {
+		t.Errorf("Should be missingField ErrorType")
+	}
+	if results.PkgResults[2].Errors[1].Error.ErrorMsg != "has no PackageExternalReferences field" {
+		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	}
+	if !slices.Equal(results.PkgResults[2].Errors[1].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
 	}
 
@@ -357,13 +385,13 @@ Conformance issues in packages:
 	if results.PkgResults[3].Package.Name != "last package" {
 		t.Errorf("The fourth package should be named 'last package' but was named '%s'", packageName)
 	}
-	if len(results.PkgResults[2].Errors) != 1 {
+	if len(results.PkgResults[3].Errors) != 1 {
 		t.Error("There should be two errors")
 	}
-	if results.PkgResults[2].Errors[0].Error.ErrorType != "missingField" {
+	if results.PkgResults[3].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "has no PackageExternalReferences field" {
+	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "has no PackageExternalReferences field" {
 		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[2].Errors[0].ReportedBySpec, []string{"EO"}) {
@@ -371,8 +399,8 @@ Conformance issues in packages:
 	}
 
 	// Check results.Errs.AndPacks
-	if len(results.ErrsAndPacks) != 2 {
-		t.Errorf("The length of results.ErrsAndPacks should be 2 but is %d", len(results.ErrsAndPacks))
+	if len(results.ErrsAndPacks) != 3 {
+		t.Errorf("The length of results.ErrsAndPacks should be 3 but is %d", len(results.ErrsAndPacks))
 	}
 	expect := []string{
 		"Some Package",
@@ -438,7 +466,7 @@ func TestGoogleChecker(t *testing.T) {
 		}
 	}
 
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 4 of these packages failed the conformance checks.
+	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
 
 Top-level conformance issues:
 Creator organization is Some Other Company, but should always be 'Google LLC'.. [Google]
@@ -447,7 +475,7 @@ SBOM has no License Identifier field. [Google]
 Conformance issues in packages:
 1/4 package failed: has neither Concluded License nor License From Files. Both of these cannot be absent from a package.
 1/4 package failed: has no PackageName field
-4/4 packages failed: has no PackageSupplier field
+3/4 packages failed: has no PackageSupplier field
 `
 
 	results := checker.Results()
@@ -459,8 +487,8 @@ Conformance issues in packages:
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
 			results.Summary.TotalSBOMPackages)
 	}
-	if results.Summary.FailedSBOMPackages != 4 {
-		t.Errorf("There should be 4 FailedSBOMPackages but the results only had %d\n",
+	if results.Summary.FailedSBOMPackages != 3 {
+		t.Errorf("There should be 3 FailedSBOMPackages but the results only had %d\n",
 			results.Summary.FailedSBOMPackages)
 	}
 	if len(results.Summary.SpecSummaries) != 1 {
@@ -480,8 +508,8 @@ Conformance issues in packages:
 			len(expectedCheckNames),
 			results.Summary.SpecSummaries["Google"].TotalChecks)
 	}
-	if len(results.PkgResults) != results.Summary.FailedSBOMPackages {
-		t.Errorf("len(results.PkgResults) should be the same as results.Summary.FailedSBOMPackages but was %d\n",
+	if len(results.PkgResults) != 4 {
+		t.Errorf("len(results.PkgResults) should be 4 but was %d\n",
 			len(results.PkgResults))
 	}
 
@@ -562,17 +590,8 @@ Conformance issues in packages:
 	if results.PkgResults[3].Package.Name != "last package" {
 		t.Errorf("The fourth package should be named 'last package' but was named '%s'", packageName)
 	}
-	if len(results.PkgResults[3].Errors) != 1 {
+	if len(results.PkgResults[3].Errors) != 0 {
 		t.Error("There should only be one error")
-	}
-	if results.PkgResults[3].Errors[0].Error.ErrorType != "missingField" {
-		t.Errorf("Should be missingField ErrorType")
-	}
-	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "has no PackageSupplier field" {
-		t.Errorf("Should be 'has no PackageSupplier field' ErrorMsg")
-	}
-	if !slices.Equal(results.PkgResults[3].Errors[0].ReportedBySpec, []string{"Google"}) {
-		t.Errorf("The issue should be reported by Google")
 	}
 
 	// Check results.Errs.AndPacks
@@ -583,7 +602,6 @@ Conformance issues in packages:
 		"Some Package",
 		"Package-1",
 		"another package",
-		"last package",
 	}
 	if !slices.Equal(results.ErrsAndPacks["has no PackageSupplier field"], expect) {
 		t.Error("Wrong")
