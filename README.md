@@ -2,8 +2,7 @@
 
 A tool to check the conformance of SBOMs compared to Googles internal spec, the EO requirements and the SPDX requirements.
 
-> [!IMPORTANT]
->  This library is being developed. It's not recommended to use it yet.
+> [!IMPORTANT] This library is being developed. It's not recommended to use it yet.
 
 ## How to use
 
@@ -35,7 +34,7 @@ With a `BaseChecker`, we can now run all top-level checks and package-level chec
 
 checker.RunChecks()
 
-``` 
+```
 
 After that, you can get information about the SBOM and its conformance.
 
@@ -93,18 +92,20 @@ sbom-conformance is currently mainly intended to be used as a library. We have a
 
 ## Supported Specifications
 
-> [!IMPORTANT]
->  This documentation is being developed and is not complete. 
+> [!IMPORTANT] This documentation is being developed and is not complete.
 
 ### NTIA Minimum Elements
+
 name: `EO`
 
 A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf.
 
 #### Supplier Name
+
 This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) is not missing or empty.
 
 ## Disclaimer
-This is not an officially supported Google product. This project is not
-eligible for the [Google Open Source Software Vulnerability Rewards
-Program](https://bughunters.google.com/open-source-security).
+
+This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
+
+This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).

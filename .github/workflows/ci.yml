@@ -11,73 +11,57 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: ci
-
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
-
+    branches: ["main"]
 permissions: {}
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
-      with:
-        persist-credentials: false
-
-    - name: Set up Go
-      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
-      with:
-        go-version-file: 'go.mod'
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./...
-
-
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
+        with:
+          go-version-file: "go.mod"
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v ./...
   license_check:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
-      with:
-        persist-credentials: false
-
-    - name: Set up Go
-      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
-      with:
-        go-version-file: 'go.mod'
-
-    - name: Check License Headers
-      run: go run github.com/google/addlicense@dc31ac9ffcca99c9457226366135701794b128c0 -check -l apache ** .github/** # tag=v1.1.1
-
-
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
+        with:
+          go-version-file: "go.mod"
+      - name: Check License Headers
+        run: go run github.com/google/addlicense@dc31ac9ffcca99c9457226366135701794b128c0 -check -l apache ** .github/** # tag=v1.1.1
   lint:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
-      with:
-        persist-credentials: false
-
-    - name: Set up Go
-      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
-      with:
-        go-version: '1.22'
-
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v6.0.0
-      with:
-        version: v2.0.2
-        args: --verbose
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
+        with:
+          go-version: "1.22"
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6.0.0
+        with:
+          version: v2.0.2
+          args: --verbose
