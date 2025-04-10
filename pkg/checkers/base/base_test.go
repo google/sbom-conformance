@@ -330,6 +330,92 @@ func TestEOPkgResults(t *testing.T) {
 				Errors:  []*types.NonConformantField{},
 			}},
 		},
+		{
+			name: "Missing version fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "Organization: foo",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageVersion field",
+					},
+					CheckName:      "Check that SBOM packages have a valid version",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
+		{
+			name: "Empty version string fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "",
+						"supplier": "Organization: foo",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageVersion field",
+					},
+					CheckName:      "Check that SBOM packages have a valid version",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
+		{
+			name: "Version is NOASSERTION fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "NOASSERTION",
+						"supplier": "Organization: foo",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageVersion field",
+					},
+					CheckName:      "Check that SBOM packages have a valid version",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
 	}
 
 	for _, tt := range tests {
