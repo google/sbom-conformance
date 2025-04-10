@@ -15,6 +15,7 @@
 package base
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 )
 
@@ -208,6 +210,145 @@ func CompareTwoPkgResults(t *testing.T, got, expected *types.PkgResult) bool {
 		}
 	}
 	return true
+}
+
+// Note: these parse failures should either be folded into the quality evaluation,
+// or they should return more specific errors.
+func TestParseFailure(t *testing.T) {
+	tests := []struct {
+		name string
+		sbom string
+	}{
+		{
+			name: "Supplier with invalid format causes parse failure",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo",
+					"versionInfo": "v1",
+					"supplier": "not an organization",
+					"externalRefs": [{
+						"referenceCategory": "PACKAGE-MANAGER", 
+						"referenceType": "purl",
+						"referenceLocator": "pkg:foo"
+					}]
+				}]
+			}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(WithEOChecker())
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			_, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err == nil {
+				t.Fatalf("SetSBOM did not return an error")
+			}
+		})
+	}
+}
+
+func TestEOPkgResults(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []*types.PkgResult
+	}{
+		{
+			name: "No package failures",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "v1",
+						"supplier": "Organization: foo",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors:  []*types.NonConformantField{},
+			}},
+		},
+		{
+			name: "Missing supplier fails check",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo",
+					"versionInfo": "v1",
+					"externalRefs": [{
+						"referenceCategory": "PACKAGE-MANAGER", 
+						"referenceType": "purl",
+						"referenceLocator": "pkg:foo"
+					}]
+				}]
+			}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "The supplier field is missing",
+					},
+					CheckName:      "Check that the package has a supplier",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
+		{
+			name: "Supplier is NOASSERTION passes check",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo",
+					"versionInfo": "v1",
+					"supplier": "Organization: foo",
+					"externalRefs": [{
+						"referenceCategory": "PACKAGE-MANAGER", 
+						"referenceType": "purl",
+						"referenceLocator": "pkg:foo"
+					}]
+				}]
+			}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors:  []*types.NonConformantField{},
+			}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(WithEOChecker())
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(tt.expected, checker.Results().PkgResults); diff != "" {
+				t.Errorf("Encountered checker.Results() diff (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 // e2e test for the EO checker.
@@ -428,7 +569,10 @@ Conformance issues in packages:
 
 	// Check results.Errs.AndPacks
 	if len(results.ErrsAndPacks) != 3 {
-		t.Errorf("The length of results.ErrsAndPacks should be 3 but is %d", len(results.ErrsAndPacks))
+		t.Errorf(
+			"The length of results.ErrsAndPacks should be 3 but is %d",
+			len(results.ErrsAndPacks),
+		)
 	}
 	expect := []string{
 		"Some Package",
