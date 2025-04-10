@@ -15,6 +15,7 @@
 package base
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 )
 
@@ -208,6 +210,33 @@ func CompareTwoPkgResults(t *testing.T, got, expected *types.PkgResult) bool {
 		}
 	}
 	return true
+}
+
+func TestEOPkgResults(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []*types.PkgResult
+	}{}
+
+  for _, tt := range tests {
+    t.Run(tt.name, func (t *testing.T) {
+    	checker, err := NewChecker(WithEOChecker())
+    	if err != nil {
+    		t.Fatalf("NewChecker failed with error: %v", err)
+    	}
+    	checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+    	if err != nil {
+    		t.Fatalf("SetSBOM failed with error: %v", err)
+    	}
+
+      checker.RunChecks()
+      if diff := cmp.Diff(); diff != "" {
+
+      }
+    })
+  }
+
 }
 
 // e2e test for the EO checker.
