@@ -12,20 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TOOLS_DIR := tools
-TOOLS_BIN_DIR := $(abspath $(TOOLS_DIR)/bin)
-GOBIN := $(shell go env GOBIN)
+.PHONY: all
+all: build test fmt
 
-GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
-$(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod
-	cd $(TOOLS_DIR); GOBIN=$(TOOLS_BIN_DIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint
+.PHONY: build
+build:
+	go build ./...
 
-check-linter: ## Install and run golang linter
-check-linter: | $(GOLANGCI_LINT)
-	# Run golangci-lint linter
-	$(GOLANGCI_LINT) run -c golangci.yml
+.PHONY: test
+test: build
+	go test ./...
 
-fix-linter: ## Install and run golang linter, with fixes
-fix-linter: | $(GOLANGCI_LINT)
-	# Run golangci-lint linter
-	$(GOLANGCI_LINT) run -c golangci.yml --fix
+.PHONY: fmt
+fmt: check-golangci-lint-installed
+	golangci-lint run --fix
+# keep in sync with .github/workflows/markup.yaml
+	go run github.com/google/yamlfmt/cmd/yamlfmt@928ce33e9afa338486d889549fc78e6b7feabeaf . #tag=v0.16.0
+# keep in sync with .github/workflows/markup.yaml
+	go run github.com/Kunde21/markdownfmt/v3/cmd/markdownfmt@e8fe4577b9bd844cf3bc3b10af16ffdb2ff30195 -w . #tag=v3.1.0
+
+.PHONY: check-golangci-lint-installed
+check-golangci-lint-installed:
+	@if ! command -v golangci-lint >/dev/null 2>&1; then \
+		echo "Golangci-lint is not installed. Please install Golangci-lint (https://golangci-lint.run/welcome/install/) and try again."; \
+		exit 1; \
+	fi
