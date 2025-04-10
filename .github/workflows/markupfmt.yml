@@ -1,0 +1,51 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: Markup format
+on:
+  push:
+    branches: ["main"]
+    paths: ["**/*.md", "**/*.yml", "**/*.yaml"]
+  pull_request:
+    branches: ["main"]
+    paths: ["**/*.md", "**/*.yml", "**/*.yaml"]
+permissions: {}
+jobs:
+  yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
+        with:
+          go-version: '1.23'
+      - name: Format yaml
+        run: go run github.com/google/yamlfmt/cmd/yamlfmt@928ce33e9afa338486d889549fc78e6b7feabeaf . #tag=v0.16.0
+      - name: Check if files changed
+        run: git diff --exit-code
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
+        with:
+          go-version: '1.23'
+      - name: Format markdown
+        run: go run github.com/Kunde21/markdownfmt/v3/cmd/markdownfmt@e8fe4577b9bd844cf3bc3b10af16ffdb2ff30195 -w . #tag=v3.1.0
+      - name: Check if files changed
+        run: git diff --exit-code
