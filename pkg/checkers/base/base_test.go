@@ -331,7 +331,7 @@ func TestEOPkgResults(t *testing.T) {
 			}},
 		},
 		{
-			name: "Missing version fails check",
+			name: "Missing package version fails check",
 			sbom: `{
 					"spdxVersion": "SPDX-2.3",
 					"name": "SimpleSBOM",
@@ -359,7 +359,7 @@ func TestEOPkgResults(t *testing.T) {
 			}},
 		},
 		{
-			name: "Empty version string fails check",
+			name: "Empty package version string fails check",
 			sbom: `{
 					"spdxVersion": "SPDX-2.3",
 					"name": "SimpleSBOM",
@@ -388,7 +388,7 @@ func TestEOPkgResults(t *testing.T) {
 			}},
 		},
 		{
-			name: "Version is NOASSERTION fails check",
+			name: "Package version is NOASSERTION fails check",
 			sbom: `{
 					"spdxVersion": "SPDX-2.3",
 					"name": "SimpleSBOM",

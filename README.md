@@ -102,13 +102,13 @@ A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/p
 
 #### Supplier Name
 
-This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is not missing or empty.
+This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is present and non-empty.
 
 #### Version
 
-This is a package-level check that passes if the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field is not missing, is not empty, or is not NOASSERTION.
+This is a package-level check that passes if the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field is present, non-empty, and not `NOASSERTION`.
 
-TODO: the NOASSERTION behavior should either be made configurable, or consistent with Supplier.
+TODO: the `NOASSERTION` behavior should either be made configurable, or consistent with Supplier.
 
 ## Disclaimer
 
