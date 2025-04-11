@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 )
 
@@ -179,6 +180,10 @@ func CompareTwoPkgResults(t *testing.T, got, expected *types.PkgResult) bool {
 		t.Log("The two packages have different names")
 		return false
 	}
+	if len(got.Errors) != len(expected.Errors) {
+		t.Log("The two packages have a different number of errors")
+		return false
+	}
 	for i := range got.Errors {
 		pkg1ErrorNil := got.Errors[i].Error == nil
 		pkg2ErrorNil := expected.Errors[i].Error == nil
@@ -210,6 +215,160 @@ func CompareTwoPkgResults(t *testing.T, got, expected *types.PkgResult) bool {
 		}
 	}
 	return true
+}
+
+func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		specs    []func(*BaseChecker)
+		expected []*types.PkgResult
+	}{
+		{
+			name: "Packages with equal names but different SPDXIDs are not merged",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [
+						{
+							"name": "Foo",
+							"SPDXID": "SPDXRef-foo-1",
+							"versionInfo": "v1",
+							"supplier": "Organization: foo",
+							"externalRefs": [{
+								"referenceCategory": "PACKAGE-MANAGER", 
+								"referenceType": "purl",
+								"referenceLocator": "pkg:foo"
+							}]
+						},
+						{
+							"name": "Foo",
+							"SPDXID": "SPDXRef-foo-2",
+							"versionInfo": "v1",
+							"supplier": "Organization: foo",
+							"externalRefs": [{
+								"referenceCategory": "PACKAGE-MANAGER", 
+								"referenceType": "purl",
+								"referenceLocator": "pkg:foo"
+							}]
+						}
+					]
+				}`,
+			specs: []func(*BaseChecker){WithEOChecker()},
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "Foo", SpdxID: "foo-1"},
+					Errors:  []*types.NonConformantField{},
+				},
+				{
+					Package: &types.Package{Name: "Foo", SpdxID: "foo-2"},
+					Errors:  []*types.NonConformantField{},
+				},
+			},
+		},
+		{
+			name: "Multiple package errors are surfaced",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [
+						{
+							"name": "Foo",
+							"SPDXID": "SPDXRef-foo",
+							"externalRefs": [{
+								"referenceCategory": "PACKAGE-MANAGER", 
+								"referenceType": "purl",
+								"referenceLocator": "pkg:foo"
+							}]
+						}
+					]
+				}`,
+			specs: []func(*BaseChecker){WithEOChecker()},
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{
+					{
+						Error: &types.FieldError{
+							ErrorType: "missingField",
+							ErrorMsg:  "The supplier field is missing",
+						},
+						CheckName:      "Check that the package has a supplier",
+						ReportedBySpec: []string{"EO"},
+					},
+					{
+						Error: &types.FieldError{
+							ErrorType: "missingField",
+							ErrorMsg:  "has no PackageVersion field",
+						},
+						CheckName:      "Check that SBOM packages have a valid version",
+						ReportedBySpec: []string{"EO"},
+					},
+				},
+			}},
+		},
+		{
+			name:  "Multiple specs are reported in package errors",
+			specs: []func(*BaseChecker){WithEOChecker(), WithSPDXChecker()},
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "v1",
+						"supplier": "Organization: foo",
+						"downloadLocation": "foo.com",
+						"filesAnalyzed": false,
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageName field",
+					},
+					CheckName:      "Check that SBOM packages have a name",
+					ReportedBySpec: []string{"EO", "SPDX"},
+				}},
+			}},
+		},
+	}
+
+	lessPkgResult := func(package1, package2 *types.PkgResult) bool {
+		return package1.Package.SpdxID < package2.Package.SpdxID
+	}
+	lessFieldError := func(error1, error2 *types.NonConformantField) bool {
+		// All errors with the same ErrorMsg should have the same ErrorType
+		return error1.Error.ErrorMsg < error2.Error.ErrorMsg
+	}
+	lessReportedBySpec := func(s1, s2 string) bool { return s1 < s2 }
+	opts := cmp.Options{
+		cmpopts.SortSlices(lessPkgResult),
+		cmpopts.SortSlices(lessFieldError),
+		cmpopts.SortSlices(lessReportedBySpec),
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(tt.specs...)
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(tt.expected, checker.Results().PkgResults, opts); diff != "" {
+				t.Errorf("Encountered checker.Results() diff (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 // Note: these parse failures should either be folded into the quality evaluation,

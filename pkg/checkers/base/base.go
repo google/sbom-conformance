@@ -508,21 +508,10 @@ func createErrAndPkgMap(mergedPacks []*types.PkgResult) map[string][]string {
 }
 
 func resultForSamePackage(pkg1, pkg2 *types.PkgResult) bool {
-	if pkg1.Package.Name != "" && pkg2.Package.Name != "" {
-		if pkg1.Package.Name == pkg2.Package.Name {
-			return true
-		} else {
-			return false
-		}
+	if pkg1.Package.SpdxID == "" && pkg2.Package.SpdxID == "" {
+		return pkg1.Package.Name == pkg2.Package.Name
 	}
-	if pkg1.Package.SpdxID != "" && pkg2.Package.SpdxID != "" {
-		if pkg1.Package.SpdxID == pkg2.Package.SpdxID {
-			return true
-		} else {
-			return false
-		}
-	}
-	return false
+	return pkg1.Package.SpdxID == pkg2.Package.SpdxID
 }
 
 func mergePkgResults(packs []*types.PkgResult) []*types.PkgResult {
