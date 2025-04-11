@@ -2,7 +2,8 @@
 
 A tool to check the conformance of SBOMs compared to Googles internal spec, the EO requirements and the SPDX requirements.
 
-> [!IMPORTANT] This library is being developed. It's not recommended to use it yet.
+> [!IMPORTANT]  
+> This library is being developed. It's not recommended to use it yet.
 
 ## How to use
 
@@ -92,7 +93,8 @@ sbom-conformance is currently mainly intended to be used as a library. We have a
 
 ## Supported Specifications
 
-> [!IMPORTANT] This documentation is being developed and is not complete.
+> [!IMPORTANT]  
+> This documentation is being developed and is not complete.
 
 ### NTIA Minimum Elements
 
