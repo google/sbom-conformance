@@ -100,15 +100,23 @@ name: `EO`
 
 A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf.
 
-#### Supplier Name
+#### Name
 
-This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is present and non-empty.
+This refers to the "Component Name" data field in the NTIA specification. It is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.
 
 #### Version
 
-This is a package-level check that passes if the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field is present, non-empty, and not `NOASSERTION`.
+This refers to the "Version of the Component" data field in the NTIA specification. It is a package-level check that passes if the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field is present, non-empty, and not `NOASSERTION`.
 
 TODO: the `NOASSERTION` behavior should either be made configurable, or consistent with Supplier.
+
+#### Supplier
+
+This refers to the "Supplier Name" data field in the NTIA specification. It is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is present and non-empty.
+
+#### External References
+
+This refers to the "Other Unique Identifiers" data field in the NTIA specification. It is a package-level check that passes if the [External References](https://spdx.github.io/spdx-spec/v2.3/package-information/#721-external-reference-field) field is present and non-empty.
 
 ## Disclaimer
 

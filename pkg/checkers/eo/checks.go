@@ -68,11 +68,12 @@ func MustHaveExternalReferences(
 	spec, checkName string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if sbomPack.PackageExternalReferences == nil {
+	if len(sbomPack.PackageExternalReferences) == 0 {
 		issue := types.MandatoryPackageFieldError(
 			types.PackageExternalReferences,
 			spec,
 		)
+		issue.CheckName = checkName
 		issues = append(issues, issue)
 	}
 	return issues

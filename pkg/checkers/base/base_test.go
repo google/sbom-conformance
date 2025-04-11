@@ -416,6 +416,112 @@ func TestEOPkgResults(t *testing.T) {
 				}},
 			}},
 		},
+		{
+			name: "Missing package name fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "v1",
+						"supplier": "Organization: foo",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageName field",
+					},
+					CheckName:      "Check that SBOM packages have a name",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
+		{
+			name: "Empty package name string fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "",
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "v1",
+						"supplier": "Organization: foo",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageName field",
+					},
+					CheckName:      "Check that SBOM packages have a name",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
+		{
+			name: "Missing package external references fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "v1",
+						"supplier": "Organization: foo"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageExternalReferences field",
+					},
+					CheckName:      "Check that SBOM packages have external references",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
+		{
+			name: "Empty package external references fails check",
+			sbom: `{
+					"spdxVersion": "SPDX-2.3",
+					"name": "SimpleSBOM",
+					"packages": [{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"versionInfo": "v1",
+						"supplier": "Organization: foo",
+						"externalRefs": []
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "has no PackageExternalReferences field",
+					},
+					CheckName:      "Check that SBOM packages have external references",
+					ReportedBySpec: []string{"EO"},
+				}},
+			}},
+		},
 	}
 
 	for _, tt := range tests {
@@ -523,8 +629,8 @@ Conformance issues in packages:
 		t.Errorf("The 'EO' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["EO"].Conformant)
 	}
-	if results.Summary.SpecSummaries["EO"].PassedChecks != 6 {
-		t.Errorf("The 'EO' spec summary should be PassedChecks=6 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["EO"].PassedChecks != 5 {
+		t.Errorf("The 'EO' spec summary should be PassedChecks=5 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["EO"].PassedChecks)
 	}
 	if results.Summary.SpecSummaries["EO"].TotalChecks != len(expectedCheckNames) {
