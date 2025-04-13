@@ -102,6 +102,10 @@ name: `EO`
 
 A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf.
 
+#### Author
+
+This refers to the "Author of SBOM Data" data field in the NTIA specification. It is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) field contains at least one entry.
+
 #### Name
 
 This refers to the "Component Name" data field in the NTIA specification. It is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.

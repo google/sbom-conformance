@@ -412,13 +412,16 @@ func TestParseFailure(t *testing.T) {
 }
 
 func TestEOTopLevelChecks(t *testing.T) {
+	// there's a tradeoff between making these test cases more specific (and less
+	// verbose) and adding additional logic to the test case. As written, they
+	// avoid the logic and are less specific.
 	tests := []struct {
 		name     string
 		sbom     string
 		expected []*types.TopLevelCheckResult
 	}{
 		{
-			name: "Does not verify correctness - just establishes current behavior",
+			name: "Missing field causes author check to fail",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
@@ -436,6 +439,76 @@ func TestEOTopLevelChecks(t *testing.T) {
 				{
 					Name:   "Check that the SBOM has at least one creator",
 					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs creator is formatted correctly",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs packages are correctly formatted",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Empty field causes author check to fail",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {"creators": []},
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo"
+				}]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has an SPDX version",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs creator is formatted correctly",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs packages are correctly formatted",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Author check passes",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": ["Organization: Foo"]
+				},
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo"
+				}]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has an SPDX version",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: true,
 					Specs:  []string{"EO"},
 				},
 				{
