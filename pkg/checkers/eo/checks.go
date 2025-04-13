@@ -36,6 +36,13 @@ func checkRelationshipsFields(
 	return issues
 }
 
+func MustHaveTimestamp(sbom *v23.Document, spec string) []*types.NonConformantField {
+	if sbom.CreationInfo == nil || sbom.CreationInfo.Created == "" {
+		return []*types.NonConformantField{types.MandatoryPackageFieldError("Created", spec)}
+	}
+	return nil
+}
+
 func MustHaveSupplier(
 	sbomPack *v23.Package,
 	spec, checkName string,
