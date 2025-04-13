@@ -34,10 +34,6 @@ type EOChecker struct {
 func (eoChecker *EOChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			Name: "Check that the SBOM has a version",
-			Impl: common.SBOMHasSPDXVersion,
-		},
-		{
 			Name: "Check that the SBOM has an SPDX version",
 			Impl: common.SBOMHasSPDXVersion,
 		},

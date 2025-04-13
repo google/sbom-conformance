@@ -186,37 +186,39 @@ func main() {
 	}
 
 	if *flagGetChecks {
-		var getChecks strings.Builder
-		checksInRun := checker.GetAllChecks()
-		for _, check := range checksInRun {
-			var checkLine strings.Builder
-			checkLine.WriteString(fmt.Sprintf("%s | ", check.Name))
-			for _, checkSpec := range check.Specs {
+		writeCheckName := func(checkName string, specs []string, checkLine *strings.Builder) {
+			checkLine.WriteString(fmt.Sprintf("%s | ", checkName))
+			for _, checkSpec := range specs {
 				checkLine.WriteString(fmt.Sprintf("%s ", checkSpec))
 			}
 			checkLine.WriteString("| ")
+		}
 
-			if check.FailedPkgsPercent != nil {
-				var symbol string
-				if *check.FailedPkgsPercent == float32(0) {
-					symbol = greenCheck
-				} else {
-					symbol = redCross
-				}
-				checkLine.WriteString(fmt.Sprintf("%.0f%% packages passed %s\n",
-					100-*check.FailedPkgsPercent,
-					symbol))
-			} else if check.PassedHighLevel != nil {
-				if *check.PassedHighLevel {
-					checkLine.WriteString(fmt.Sprintf("Passed %s\n",
-						greenCheck))
-				} else {
-					checkLine.WriteString(fmt.Sprintf("Failed %s\n",
-						redCross))
-				}
+		var getChecks strings.Builder
+		for _, check := range checker.GetTopLevelChecks() {
+			var checkLine strings.Builder
+			writeCheckName(check.Name, check.Specs, &checkLine)
+			if check.Passed {
+				checkLine.WriteString(fmt.Sprintf("Passed %s\n",
+					greenCheck))
 			} else {
-				panic("Should not happen")
+				checkLine.WriteString(fmt.Sprintf("Failed %s\n",
+					redCross))
 			}
+			getChecks.WriteString(checkLine.String())
+		}
+		for _, check := range checker.GetPackageLevelChecks() {
+			var checkLine strings.Builder
+			writeCheckName(check.Name, check.Specs, &checkLine)
+			var symbol string
+			if check.FailedPkgsPercent == float32(0) {
+				symbol = greenCheck
+			} else {
+				symbol = redCross
+			}
+			checkLine.WriteString(fmt.Sprintf("%.0f%% packages passed %s\n",
+				100-check.FailedPkgsPercent,
+				symbol))
 			getChecks.WriteString(checkLine.String())
 		}
 		fmt.Println(getChecks.String())
@@ -289,11 +291,10 @@ func main() {
 					issue.NonConformantWithSpecs)
 			}
 		} else {
-			checksInRun2 := checker.GetAllChecks()
 			output := types.OutputFromInput(
 				checker.PkgResults, nil,
 				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
-				checksInRun2,
+				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
 			)
 			jsonBytes, err := json.MarshalIndent(output, "", "  ")
 			if err != nil {
@@ -327,11 +328,10 @@ func main() {
 					issue.NonConformantWithSpecs)
 			}
 		} else {
-			checksInRun2 := checker.GetAllChecks()
 			output := types.OutputFromInput(
 				nil, checker.ErrsAndPacks,
 				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
-				checksInRun2,
+				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
 			)
 			jsonBytes, err := json.MarshalIndent(output, "", "  ")
 			if err != nil {
