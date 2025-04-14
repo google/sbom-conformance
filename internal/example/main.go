@@ -169,7 +169,6 @@ func main() {
 	////                          ////
 	//////////////////////////////////
 
-	fmt.Println("Results")
 	numberOfFailedPkgs := checker.NumberOfSBOMPackages() - checker.NumberOfCompliantPackages()
 
 	if *flagTextSummary {

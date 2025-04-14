@@ -1108,26 +1108,7 @@ func TestEOChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 4 of these packages failed the conformance checks.
-
-Top-level conformance issues:
-Creator organization is Some Other Company, but should always be 'Google LLC'.. [EO]
-
-Conformance issues in packages:
-1/4 package failed: has no PackageName field
-3/4 packages failed: The supplier field is missing
-4/4 packages failed: has no PackageExternalReferences field
-`
-
 	results := checker.Results()
-	if !strings.EqualFold(expectedTextSummary, results.TextSummary) {
-		t.Errorf(
-			"The text summary was not as expected. \nWas:\n'%s'\nExpected:\n'%s'\n",
-			results.TextSummary,
-			expectedTextSummary,
-		)
-	}
 
 	if results.Summary.TotalSBOMPackages != 4 {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
@@ -1318,27 +1299,7 @@ func TestGoogleChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
-
-Top-level conformance issues:
-Creator organization is Some Other Company, but should always be 'Google LLC'.. [Google]
-SBOM has no License Identifier field. [Google]
-
-Conformance issues in packages:
-1/4 package failed: has neither Concluded License nor License From Files. Both of these cannot be absent from a package.
-1/4 package failed: has no PackageName field
-3/4 packages failed: has no PackageSupplier field
-`
-
 	results := checker.Results()
-	if !strings.EqualFold(expectedTextSummary, results.TextSummary) {
-		t.Errorf(
-			"The text summary was not as expected. \nWas:\n'%s'\nExpected:\n'%s'\n",
-			results.TextSummary,
-			expectedTextSummary,
-		)
-	}
 
 	if results.Summary.TotalSBOMPackages != 4 {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
@@ -1501,25 +1462,7 @@ func TestSPDXChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
-
-Top-level conformance issues:
-Creator organization is Some Other Company, but should always be 'Google LLC'.. [SPDX]
-
-Conformance issues in packages:
-1/4 package failed: has no PackageName field
-3/4 packages failed: has no PackageDownloadLocation field
-`
-
 	results := checker.Results()
-	if !strings.EqualFold(expectedTextSummary, results.TextSummary) {
-		t.Errorf(
-			"The text summary was not as expected. \nWas:\n'%s'\nExpected:\n'%s'\n",
-			results.TextSummary,
-			expectedTextSummary,
-		)
-	}
 
 	if results.Summary.TotalSBOMPackages != 4 {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",

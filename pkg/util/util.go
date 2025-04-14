@@ -15,6 +15,7 @@
 package util
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -139,4 +140,31 @@ func RunPkgLevelChecks(
 		pkgResults = append(pkgResults, pkgResult)
 	}
 	return pkgResults
+}
+
+// StringBuilder augments strings.Builder to allow for easier formatting and
+// application of prefixes and suffixes.
+type StringBuilder struct {
+	s      *strings.Builder
+	prefix string
+	suffix string
+}
+
+// StringBuilderWithPrefix returns a StringBuilder that will send all writes to
+// initialStringBuilder, with the prefix and suffix applied before and after
+// each write.
+func StringBuilderWithPrefixAndSuffix(
+	initialStringBuilder *strings.Builder,
+	prefix string,
+	suffix string,
+) *StringBuilder {
+	return &StringBuilder{s: initialStringBuilder, prefix: prefix, suffix: suffix}
+}
+
+// Writef formats according to a format specifier and writes to the StringBuilder,
+// applying the prefix and suffix.
+func (sb *StringBuilder) Writef(format string, a ...any) {
+	sb.s.WriteString(sb.prefix)
+	fmt.Fprintf(sb.s, format, a...)
+	sb.s.WriteString(sb.suffix)
 }
