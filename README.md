@@ -1,6 +1,6 @@
 # sbom-conformance
 
-A tool to check the conformance of SBOMs compared to Googles internal spec, the EO requirements and the SPDX requirements.
+A tool to check the conformance of SBOMs to Google's internal spec, the NTIA Minimum elements specification, and the SPDX requirements.
 
 > [!IMPORTANT]  
 > This library is being developed. It's not recommended to use it yet.
@@ -63,28 +63,28 @@ Get a structured summary of the SBOM and the conformance checks.
 results.Summary
 ```
 
+##### Get top-level results
+
+Get the results of the top-level conformance checks.
+
+```go
+results.TopLevelChecks
+```
+
 ##### Get package results
 
-Gets structured results for the packages from the checks.
+There are two ways to get the results of the package-level conformance checks.
+
+Get conformance checks per-package:
 
 ```go
 results.PkgResults
 ```
 
-##### Get error results
-
-Gets the output of the conformance checks sorted by issues found.
+Get the conformance checks directly, with statistics on the number of passed packages.
 
 ```go
-results.PkgResults
-```
-
-##### ChecksInRun
-
-Gets a summary of the checks that were included in the run.
-
-```go
-results.ChecksInRun
+results.PackageLevelChecks
 ```
 
 ## main.go

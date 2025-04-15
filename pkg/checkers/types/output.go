@@ -22,15 +22,43 @@ type SpecSummary struct {
 	TotalChecks  int `json:"totalChecks"`
 }
 
+type TopLevelCheckResult struct {
+	Name   string   `json:"name"`
+	Passed bool     `json:"passed"`
+	Specs  []string `json:"specs"`
+}
+
+type PackageLevelCheckResult struct {
+	Name              string   `json:"name"`
+	FailedPkgsPercent float32  `json:"failedPkgsPercent,omitempty"`
+	Specs             []string `json:"specs"`
+}
+
 // Output is the type we convert to json when we output the results.
 type Output struct {
-	TextSummary        string              `json:"textSummary"`
-	Summary            *Summary            `json:"summary"`
-	ErrsAndPacks       map[string][]string `json:"errsAndPacks,omitempty"`
-	PkgResults         []*PkgResult        `json:"pkgResults,omitempty"`
-	ChecksInRun        []*CheckSummary     `json:"checksInRun"`
-	TotalSBOMPackages  int                 `json:"totalSbomPackages"`
-	FailedSBOMPackages int                 `json:"failedSbomPackages"`
+	// TextSummary is a text summary of the conformance checks
+	TextSummary string `json:"textSummary"`
+
+	// Summary is a structured summary of the conformance checks
+	Summary *Summary `json:"summary"`
+
+	// TopLevelChecks is a list of the top-level checks that were run along with
+	// the specifications they are a part of and whether they passed or not.
+	TopLevelChecks []*TopLevelCheckResult `json:"topLevelChecks"`
+
+	// PackageLevelChecks a list of the package-checks that were run along with
+	// the specifications they are a part of and the number of packages they passed
+	// for.
+	PackageLevelChecks []*PackageLevelCheckResult `json:"packageLevelChecks"`
+
+	// PkgResults is a list of the packages in the SBOM, along with the conformance
+	// checks that each package failed.
+	PkgResults []*PkgResult `json:"pkgResults,omitempty"`
+
+	// ErrsAndPacks is a map of failed conformance checks to the names of the
+	// packages that failed them.
+	// TODO - does this need to exist?
+	ErrsAndPacks map[string][]string `json:"errsAndPacks,omitempty"`
 }
 
 type Summary struct {
@@ -42,13 +70,13 @@ type Summary struct {
 func OutputFromInput(pkgResults []*PkgResult,
 	errsAndPacks map[string][]string,
 	totalSBOMPkgs, failedSBOMackages int,
-	checksInRun []*CheckSummary,
+	topLevelChecks []*TopLevelCheckResult,
+	packageLevelChecks []*PackageLevelCheckResult,
 ) *Output {
 	return &Output{
 		PkgResults:         pkgResults,
 		ErrsAndPacks:       errsAndPacks,
-		TotalSBOMPackages:  totalSBOMPkgs,
-		FailedSBOMPackages: failedSBOMackages,
-		ChecksInRun:        checksInRun,
+		TopLevelChecks:     topLevelChecks,
+		PackageLevelChecks: packageLevelChecks,
 	}
 }

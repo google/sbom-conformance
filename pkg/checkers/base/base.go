@@ -209,70 +209,64 @@ func (checker *BaseChecker) checkIsPkg(checkName string) bool {
 	return false
 }
 
-// This returns all the checks that will run.
-// Use this after InitChecks().
-func (checker *BaseChecker) GetAllChecks() []*types.CheckSummary {
-	summaries := make(map[string][]string)
+// checksRunWithSpecification returns a map from the name of checks to the specifications that
+// include them. If the input function is provided, a check will only be included if
+// the function returns true when called on the check name. It is expected that
+// the checks have already been run.
+func (checker *BaseChecker) checksRunWithSpecification(
+	filterFunc func(string) bool,
+) map[string][]string {
+	checksToSpecifications := map[string][]string{}
 	for _, specChecker := range checker.SpecCheckers {
 		for _, check := range specChecker.GetChecks() {
-			_, ok := summaries[check]
-			if !ok {
-				summaries[check] = make([]string, 0)
+			if !filterFunc(check) {
+				continue
 			}
-			summaries[check] = append(summaries[check], specChecker.SpecName())
+			checksToSpecifications[check] = append(
+				checksToSpecifications[check],
+				specChecker.SpecName(),
+			)
 		}
 	}
+	return checksToSpecifications
+}
 
-	checkSummaries := make([]*types.CheckSummary, 0)
-	for checkName, specList := range summaries {
-		checkSummary := &types.CheckSummary{
-			Name:  checkName,
-			Specs: specList,
+// GetTopLevelChecks returns the results of all the top-level checks that have
+// been run.
+func (checker *BaseChecker) GetTopLevelChecks() []*types.TopLevelCheckResult {
+	checksToSpecifications := checker.checksRunWithSpecification(checker.checkIsTopLvl)
+	var result []*types.TopLevelCheckResult
+	for checkName, specs := range checksToSpecifications {
+		topLevelCheckResult := types.TopLevelCheckResult{
+			Name:   checkName,
+			Passed: true,
+			Specs:  specs,
 		}
-
-		isPkgCheck := checker.checkIsPkg(checkName)
-		isTopLevelCheck := checker.checkIsTopLvl(checkName)
-
-		// Do a bit of sanity checks for things that can happen
-		// but never should.
-		if isPkgCheck && isTopLevelCheck {
-			panic("This should not happen. The likely reason is duplicate naming")
-		}
-
-		if !isTopLevelCheck && !isPkgCheck {
-			panic("This should never happen")
-		}
-		switch {
-		case isPkgCheck:
-			packagesFailedPercentage := checker.countFailedPkgPercentage(
-				checkName,
-				checker.PkgResults)
-			checkSummary.FailedPkgsPercent = &packagesFailedPercentage
-		case isTopLevelCheck:
-			// If this is a high-level check,
-			// we add a passed/failed value.
-			// Go through conformance issues and set
-			// PassedHighLevel to false if we find one
-			// for this check.
-			for _, res := range checker.TopLevelResults {
-				if res.CheckName == checkName {
-					f := false
-					checkSummary.PassedHighLevel = &f
-				}
+		// checker.TopLevelResults only contains checks that have failed.
+		for _, res := range checker.TopLevelResults {
+			if res.CheckName == checkName {
+				topLevelCheckResult.Passed = false
 			}
-			// Above we only set "PassedHighLevel" to false
-			// if we find an issue. Here, we set it to true
-			// in case we did not find any issues.
-			if checkSummary.PassedHighLevel == nil {
-				t := true
-				checkSummary.PassedHighLevel = &t
-			}
-		default:
-			panic("Should not happen")
 		}
-		checkSummaries = append(checkSummaries, checkSummary)
+		result = append(result, &topLevelCheckResult)
 	}
-	return checkSummaries
+	return result
+}
+
+// GetPackageLevelChecks returns the results of all the package-level checks
+// that have been run.
+func (checker *BaseChecker) GetPackageLevelChecks() []*types.PackageLevelCheckResult {
+	checksToSpecifications := checker.checksRunWithSpecification(checker.checkIsPkg)
+	var result []*types.PackageLevelCheckResult
+	for checkName, specs := range checksToSpecifications {
+		topLevelCheckResult := types.PackageLevelCheckResult{
+			Name:              checkName,
+			FailedPkgsPercent: checker.countFailedPkgPercentage(checkName, checker.PkgResults),
+			Specs:             specs,
+		}
+		result = append(result, &topLevelCheckResult)
+	}
+	return result
 }
 
 // Creates a spec summary of all the specs in the BaseChecker.
@@ -409,13 +403,13 @@ func (checker *BaseChecker) Results() *types.Output {
 	}
 	pkgResults := checker.PkgResults
 	errsAndPacks := checker.ErrsAndPacks
-	checksInRun := checker.GetAllChecks()
 	return &types.Output{
-		TextSummary:  textSummary,
-		Summary:      summary,
-		PkgResults:   pkgResults,
-		ErrsAndPacks: errsAndPacks,
-		ChecksInRun:  checksInRun,
+		TextSummary:        textSummary,
+		Summary:            summary,
+		TopLevelChecks:     checker.GetTopLevelChecks(),
+		PackageLevelChecks: checker.GetPackageLevelChecks(),
+		PkgResults:         pkgResults,
+		ErrsAndPacks:       errsAndPacks,
 	}
 }
 

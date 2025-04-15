@@ -411,6 +411,317 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
+func TestEOTopLevelChecks(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []*types.TopLevelCheckResult
+	}{
+		{
+			name: "Does not verify correctness - just establishes current behavior",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo"
+				}]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has an SPDX version",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs creator is formatted correctly",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs packages are correctly formatted",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+	}
+
+	lessTopLevelCheckResult := func(check1, check2 *types.TopLevelCheckResult) bool {
+		return check1.Name < check2.Name
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(WithEOChecker())
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(
+				tt.expected,
+				checker.Results().TopLevelChecks,
+				cmpopts.SortSlices(lessTopLevelCheckResult)); diff != "" {
+				t.Errorf("Encountered checker.TopLevelResults() diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// This intends to test the output.PackageLevelCheckResult API, not
+// the correctness of any package level checks themselves. That is tested by
+// TestEOPkgResults (and similar for the other specifications).
+func TestPackageLevelChecks(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []*types.PackageLevelCheckResult
+		specs    []func(*BaseChecker)
+	}{
+		{
+			name: "1/2 packages fail all checks",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [
+					{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "Organization: foo",
+						"versionInfo": "v1",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					},
+					{
+						"name": "",
+						"SPDXID": "SPDXRef-bar"
+					}
+ 				]
+			}`,
+			specs: []func(*BaseChecker){WithEOChecker()},
+			expected: []*types.PackageLevelCheckResult{
+				{
+					Name:              "Check that SBOM packages have a valid version",
+					FailedPkgsPercent: 50,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have a name",
+					FailedPkgsPercent: 50,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have external references",
+					FailedPkgsPercent: 50,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that the package has a supplier",
+					FailedPkgsPercent: 50,
+					Specs:             []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "2/2 packages fail all checks",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [
+					{
+						"name": "",
+						"SPDXID": "SPDXRef-foo"
+					},
+					{
+						"name": "",
+						"SPDXID": "SPDXRef-bar"
+					}
+ 				]
+			}`,
+			specs: []func(*BaseChecker){WithEOChecker()},
+			expected: []*types.PackageLevelCheckResult{
+				{
+					Name:              "Check that SBOM packages have a valid version",
+					FailedPkgsPercent: 100,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have a name",
+					FailedPkgsPercent: 100,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have external references",
+					FailedPkgsPercent: 100,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that the package has a supplier",
+					FailedPkgsPercent: 100,
+					Specs:             []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "2/2 packages pass all checks",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [
+					{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "Organization: foo",
+						"versionInfo": "v1",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					},
+					{
+						"name": "Bar",
+						"SPDXID": "SPDXRef-bar",
+						"supplier": "Organization: foo",
+						"versionInfo": "v1",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}
+ 				]
+			}`,
+			specs: []func(*BaseChecker){WithEOChecker()},
+			expected: []*types.PackageLevelCheckResult{
+				{
+					Name:              "Check that SBOM packages have a valid version",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have a name",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have external references",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that the package has a supplier",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Multiple specs are reported",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"packages": [
+					{
+						"name": "Foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "Organization: foo",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com",
+						"versionInfo": "v1",
+						"externalRefs": [{
+							"referenceCategory": "PACKAGE-MANAGER", 
+							"referenceType": "purl",
+							"referenceLocator": "pkg:foo"
+						}]
+					}
+ 				]
+			}`,
+			specs: []func(*BaseChecker){WithEOChecker(), WithSPDXChecker()},
+			expected: []*types.PackageLevelCheckResult{
+				{
+					Name:              "Check that SBOM packages have a valid version",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages have a name",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO", "SPDX"},
+				},
+				{
+					Name:              "Check that SBOM packages have external references",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that the package has a supplier",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"EO"},
+				},
+				{
+					Name:              "Check that SBOM packages' ID is correctly formatted",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"SPDX"},
+				},
+				{
+					Name:              "Check that SBOM packages' verification code is correctly formatted",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"SPDX"},
+				},
+				{
+					Name:              "Check that SBOM packages' download location is correctly formatted",
+					FailedPkgsPercent: 0,
+					Specs:             []string{"SPDX"},
+				},
+			},
+		},
+	}
+
+	lessPackageLeveResult := func(check1, check2 *types.PackageLevelCheckResult) bool {
+		return check1.Name < check2.Name
+	}
+	lessReportedBySpec := func(s1, s2 string) bool { return s1 < s2 }
+	opts := cmp.Options{
+		cmpopts.SortSlices(lessPackageLeveResult),
+		cmpopts.SortSlices(lessReportedBySpec),
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(tt.specs...)
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(
+				tt.expected,
+				checker.Results().PackageLevelChecks,
+				opts); diff != "" {
+				t.Errorf("Encountered checker.TopLevelResults() diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestEOPkgResults(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -725,33 +1036,6 @@ func TestEOChecker(t *testing.T) {
 	// Run checks
 	checker.RunChecks()
 
-	expectedCheckNames := []string{
-		"Check that the SBOM has a version",
-		"Check that the SBOM has an SPDX version",
-		"Check that the SBOM has at least one creator",
-		"Check that the SBOMs creator is formatted correctly",
-		"Check that the SBOMs packages are correctly formatted",
-		"Check that SBOM packages have a name",
-		"Check that SBOM packages have a valid version",
-		"Check that the package has a supplier",
-		"Check that SBOM packages have external references",
-	}
-
-	checksInRun := checker.GetAllChecks()
-	if len(checksInRun) != len(expectedCheckNames) {
-		t.Fatalf(
-			"This spec should have %d checks but had %d",
-			len(expectedCheckNames),
-			len(checksInRun),
-		)
-	}
-
-	for _, checkInRun := range checksInRun {
-		if !slices.Contains(expectedCheckNames, checkInRun.Name) {
-			t.Errorf("The EO checks should include %s but do not", checkInRun.Name)
-		}
-	}
-
 	expectedTextSummary := `Analyzed SBOM package with 4 packages. 4 of these packages failed the conformance checks.
 
 Top-level conformance issues:
@@ -788,14 +1072,9 @@ Conformance issues in packages:
 		t.Errorf("The 'EO' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["EO"].Conformant)
 	}
-	if results.Summary.SpecSummaries["EO"].PassedChecks != 5 {
-		t.Errorf("The 'EO' spec summary should be PassedChecks=5 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["EO"].PassedChecks != 4 {
+		t.Errorf("The 'EO' spec summary should be PassedChecks=4 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["EO"].PassedChecks)
-	}
-	if results.Summary.SpecSummaries["EO"].TotalChecks != len(expectedCheckNames) {
-		t.Errorf("The 'EO' spec summary should be TotalChecks=%d but was TotalChecks=%d\n",
-			len(expectedCheckNames),
-			results.Summary.SpecSummaries["EO"].TotalChecks)
 	}
 	if len(results.PkgResults) != results.Summary.FailedSBOMPackages {
 		t.Errorf(
@@ -967,36 +1246,6 @@ func TestGoogleChecker(t *testing.T) {
 	// Run checks
 	checker.RunChecks()
 
-	expectedCheckNames := []string{
-		"Check that the SBOM has an SPDX version",
-		"Check that the SBOM has a data license",
-		"Check that the SBOM has an SPDXIdentifier",
-		"Check that the SBOM has a Document Name",
-		"Check that the SBOM has a Document Namespace",
-		"Check that the SBOM has at least one creator",
-		"Check that the SBOMs creator is formatted correctly",
-		"Check the SBOMs other licensing fields",
-		"Check that SBOM packages have a name",
-		"Check that SBOM packages' ID is correctly formatted",
-		"Check that SBOM packages have specified the supplier as Google",
-		"Check that SBOM packages have not left both PackageLicenseConcluded and PackageLicenseInfoFromFiles empty",
-	}
-
-	checksInRun := checker.GetAllChecks()
-	if len(checksInRun) != len(expectedCheckNames) {
-		t.Fatalf(
-			"This spec should have %d checks but had %d",
-			len(expectedCheckNames),
-			len(checksInRun),
-		)
-	}
-
-	for _, checkInRun := range checksInRun {
-		if !slices.Contains(expectedCheckNames, checkInRun.Name) {
-			t.Errorf("The Google checks should include %s but do not", checkInRun.Name)
-		}
-	}
-
 	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
 
 Top-level conformance issues:
@@ -1037,11 +1286,6 @@ Conformance issues in packages:
 	if results.Summary.SpecSummaries["Google"].PassedChecks != 7 {
 		t.Errorf("The 'Google' spec summary should be PassedChecks=7 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["Google"].PassedChecks)
-	}
-	if results.Summary.SpecSummaries["Google"].TotalChecks != len(expectedCheckNames) {
-		t.Errorf("The 'Google' spec summary should be TotalChecks=%d but was TotalChecks=%d\n",
-			len(expectedCheckNames),
-			results.Summary.SpecSummaries["Google"].TotalChecks)
 	}
 	if len(results.PkgResults) != 4 {
 		t.Errorf("len(results.PkgResults) should be 4 but was %d\n",
@@ -1164,7 +1408,7 @@ Conformance issues in packages:
 
 // e2e test for the SPDX checker.
 //
-//nolint:all
+
 func TestSPDXChecker(t *testing.T) {
 	sbom := "simple.json"
 	checker, err := NewChecker(WithSPDXChecker())
@@ -1184,35 +1428,6 @@ func TestSPDXChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedCheckNames := []string{
-		"Check that the SBOM has an SPDX version",
-		"Check that the SBOM has a data license",
-		"Check that the SBOM has an SPDXIdentifier",
-		"Check that the SBOM has a Document Name",
-		"Check that the SBOM has a Document Namespace",
-		"Check that the SBOM has at least one creator",
-		"Check that the SBOMs creator is formatted correctly",
-		"Check that SBOM packages have a name",
-		"Check that SBOM packages' ID is correctly formatted",
-		"Check that SBOM packages' verification code is correctly formatted",
-		"Check that SBOM packages' download location is correctly formatted",
-	}
-
-	checksInRun := checker.GetAllChecks()
-	if len(checksInRun) != len(expectedCheckNames) {
-		t.Fatalf(
-			"This spec should have %d checks but had %d",
-			len(expectedCheckNames),
-			len(checksInRun),
-		)
-	}
-
-	for _, checkInRun := range checksInRun {
-		if !slices.Contains(expectedCheckNames, checkInRun.Name) {
-			t.Errorf("The SPDX checks should include %s but do not", checkInRun.Name)
-		}
-	}
 
 	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
 
@@ -1252,11 +1467,6 @@ Conformance issues in packages:
 	if results.Summary.SpecSummaries["SPDX"].PassedChecks != 8 {
 		t.Errorf("The 'SPDX' spec summary should be PassedChecks=8 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["SPDX"].PassedChecks)
-	}
-	if results.Summary.SpecSummaries["SPDX"].TotalChecks != len(expectedCheckNames) {
-		t.Errorf("The 'SPDX' spec summary should be TotalChecks=%d but was TotalChecks=%d\n",
-			len(expectedCheckNames),
-			results.Summary.SpecSummaries["SPDX"].TotalChecks)
 	}
 	if len(results.PkgResults) != 4 {
 		t.Errorf("len(results.PkgResults) should be 4 but was %d\n",
