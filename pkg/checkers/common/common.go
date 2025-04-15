@@ -94,9 +94,7 @@ func SBOMHasAtLeastOneCreator(
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if doc.CreationInfo == nil ||
-		(doc.CreationInfo != nil && (len(doc.CreationInfo.Creators) == 0 ||
-			doc.CreationInfo.Creators == nil)) {
+	if doc.CreationInfo == nil || len(doc.CreationInfo.Creators) == 0 {
 		issues = append(issues, types.CreateFieldError(types.Creator, spec))
 	}
 	return issues
