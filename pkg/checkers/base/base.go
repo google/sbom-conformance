@@ -384,16 +384,16 @@ func (checker *BaseChecker) TextSummary() string {
 		pkgLevelIssues := make([]string, 0)
 		for e, p := range checker.ErrsAndPacks {
 			var packageString string
-			if len(p) == 1 {
-				packageString = "package"
-			} else {
+			if checker.NumberOfSBOMPackages() > 1 {
 				packageString = "packages"
+			} else {
+				packageString = "package"
 			}
-			issue := fmt.Sprintf("%d/%d %s failed: %s",
+			issue := fmt.Sprintf("%s: %d/%d %s failed.",
+				e,
 				len(p),
 				checker.NumberOfSBOMPackages(),
-				packageString,
-				e)
+				packageString)
 			pkgLevelIssues = append(pkgLevelIssues, issue)
 		}
 		slices.Sort(pkgLevelIssues)
