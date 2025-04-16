@@ -421,7 +421,7 @@ func TestEOTopLevelChecks(t *testing.T) {
 		expected []*types.TopLevelCheckResult
 	}{
 		{
-			name: "Missing field causes author check to fail",
+			name: "Missing fields cause author and timestamp checks to fail",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
@@ -442,7 +442,7 @@ func TestEOTopLevelChecks(t *testing.T) {
 					Specs:  []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOMs creator is formatted correctly",
+					Name:   "Check that the SBOM has a timestamp",
 					Passed: false,
 					Specs:  []string{"EO"},
 				},
@@ -454,46 +454,50 @@ func TestEOTopLevelChecks(t *testing.T) {
 			},
 		},
 		{
-			name: "Empty field causes author check to fail",
-			sbom: `{
-				"spdxVersion": "SPDX-2.3",
-				"name": "SimpleSBOM",
-				"creationInfo": {"creators": []},
-				"packages": [{
-					"name": "Foo",
-					"SPDXID": "SPDXRef-foo"
-				}]
-			}`,
-			expected: []*types.TopLevelCheckResult{
-				{
-					Name:   "Check that the SBOM has an SPDX version",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: false,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOMs creator is formatted correctly",
-					Passed: false,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOMs packages are correctly formatted",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-			},
-		},
-		{
-			name: "Author check passes",
+			name: "Empty fields cause author and timestamp checks to fail",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
 				"creationInfo": {
-					"creators": ["Organization: Foo"]
+					"creators": [],
+					"created": ""
+				},
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo"
+				}]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has an SPDX version",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOMs packages are correctly formatted",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Author and timestamp checks pass",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "some timestamp"
 				},
 				"packages": [{
 					"name": "Foo",
@@ -512,8 +516,8 @@ func TestEOTopLevelChecks(t *testing.T) {
 					Specs:  []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOMs creator is formatted correctly",
-					Passed: false,
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: true,
 					Specs:  []string{"EO"},
 				},
 				{
@@ -1126,8 +1130,8 @@ func TestEOChecker(t *testing.T) {
 		t.Errorf("The 'EO' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["EO"].Conformant)
 	}
-	if results.Summary.SpecSummaries["EO"].PassedChecks != 4 {
-		t.Errorf("The 'EO' spec summary should be PassedChecks=4 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["EO"].PassedChecks != 5 {
+		t.Errorf("The 'EO' spec summary should be PassedChecks=5 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["EO"].PassedChecks)
 	}
 	if len(results.PkgResults) != results.Summary.FailedSBOMPackages {

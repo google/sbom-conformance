@@ -42,8 +42,8 @@ func (eoChecker *EOChecker) InitChecks() {
 			Impl: common.SBOMHasAtLeastOneCreator,
 		},
 		{
-			Name: "Check that the SBOMs creator is formatted correctly",
-			Impl: common.SBOMHasCorrectCreationInfo,
+			Name: "Check that the SBOM has a timestamp",
+			Impl: MustHaveTimestamp,
 		},
 		{
 			Name: "Check that the SBOMs packages are correctly formatted",
