@@ -120,7 +120,7 @@ func wrongDateFormat(
 func wrongCreatorName(
 	creator, spec string,
 ) *types.NonConformantField {
-	e := fmt.Sprintf("Creator organization is %s, "+
+	e := fmt.Sprintf("Creator organization is '%s', "+
 		"but should always be 'Google LLC'.",
 		creator)
 	return &types.NonConformantField{

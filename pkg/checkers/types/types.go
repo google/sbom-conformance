@@ -124,7 +124,7 @@ func CreateWronglyFormattedFieldError(
 func MandatoryPackageFieldError(
 	field, spec string,
 ) *NonConformantField {
-	e := fmt.Sprintf("has no %s field", field)
+	e := fmt.Sprintf("Has no %s field", field)
 	issue := &NonConformantField{
 		Error: &FieldError{
 			ErrorType: "missingField",

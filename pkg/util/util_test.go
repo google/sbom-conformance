@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 )
 
@@ -52,5 +53,24 @@ func TestDeduplicateIssues(t *testing.T) {
 	}
 	if !strings.EqualFold(deduplicated[0].ErrorType, "formatError") {
 		t.Error("Should be a 'formatError'")
+	}
+}
+
+func TestStringBuilder(t *testing.T) {
+	initialStringBuilder := strings.Builder{}
+
+	// test that initial contents carry through
+	initialStringBuilder.WriteString("a ")
+
+	// test that the prefix and the suffix are applied
+	sb := StringBuilderWithPrefixAndSuffix(&initialStringBuilder, "pre ", " post")
+	sb.Writef("%s %s", "Hello", "World")
+
+	// test the writes to initialStringBuilder carry through
+	initialStringBuilder.WriteString(" b")
+
+	expected := "a pre Hello World post b"
+	if diff := cmp.Diff(expected, initialStringBuilder.String()); diff != "" {
+		t.Errorf("Encountered checker.Results() diff (-want +got):\n%s", diff)
 	}
 }

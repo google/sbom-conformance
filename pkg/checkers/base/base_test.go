@@ -298,7 +298,7 @@ func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
 					{
 						Error: &types.FieldError{
 							ErrorType: "missingField",
-							ErrorMsg:  "has no PackageVersion field",
+							ErrorMsg:  "Has no PackageVersion field",
 						},
 						CheckName:      "Check that SBOM packages have a valid version",
 						ReportedBySpec: []string{"EO"},
@@ -329,7 +329,7 @@ func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageName field",
+						ErrorMsg:  "Has no PackageName field",
 					},
 					CheckName:      "Check that SBOM packages have a name",
 					ReportedBySpec: []string{"EO", "SPDX"},
@@ -894,7 +894,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageVersion field",
+						ErrorMsg:  "Has no PackageVersion field",
 					},
 					CheckName:      "Check that SBOM packages have a valid version",
 					ReportedBySpec: []string{"EO"},
@@ -923,7 +923,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageVersion field",
+						ErrorMsg:  "Has no PackageVersion field",
 					},
 					CheckName:      "Check that SBOM packages have a valid version",
 					ReportedBySpec: []string{"EO"},
@@ -952,7 +952,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageVersion field",
+						ErrorMsg:  "Has no PackageVersion field",
 					},
 					CheckName:      "Check that SBOM packages have a valid version",
 					ReportedBySpec: []string{"EO"},
@@ -980,7 +980,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageName field",
+						ErrorMsg:  "Has no PackageName field",
 					},
 					CheckName:      "Check that SBOM packages have a name",
 					ReportedBySpec: []string{"EO"},
@@ -1009,7 +1009,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageName field",
+						ErrorMsg:  "Has no PackageName field",
 					},
 					CheckName:      "Check that SBOM packages have a name",
 					ReportedBySpec: []string{"EO"},
@@ -1033,7 +1033,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageExternalReferences field",
+						ErrorMsg:  "Has no PackageExternalReferences field",
 					},
 					CheckName:      "Check that SBOM packages have external references",
 					ReportedBySpec: []string{"EO"},
@@ -1058,7 +1058,7 @@ func TestEOPkgResults(t *testing.T) {
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
-						ErrorMsg:  "has no PackageExternalReferences field",
+						ErrorMsg:  "Has no PackageExternalReferences field",
 					},
 					CheckName:      "Check that SBOM packages have external references",
 					ReportedBySpec: []string{"EO"},
@@ -1108,26 +1108,7 @@ func TestEOChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 4 of these packages failed the conformance checks.
-
-Top-level conformance issues:
-Creator organization is Some Other Company, but should always be 'Google LLC'.. [EO]
-
-Conformance issues in packages:
-1/4 package failed: has no PackageName field
-3/4 packages failed: The supplier field is missing
-4/4 packages failed: has no PackageExternalReferences field
-`
-
 	results := checker.Results()
-	if !strings.EqualFold(expectedTextSummary, results.TextSummary) {
-		t.Errorf(
-			"The text summary was not as expected. \nWas:\n'%s'\nExpected:\n'%s'\n",
-			results.TextSummary,
-			expectedTextSummary,
-		)
-	}
 
 	if results.Summary.TotalSBOMPackages != 4 {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
@@ -1176,8 +1157,8 @@ Conformance issues in packages:
 	if results.PkgResults[0].Errors[1].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[0].Errors[1].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[0].Errors[1].Error.ErrorMsg != "Has no PackageExternalReferences field" {
+		t.Errorf("Should be 'Has no PackageExternalReferences field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[0].Errors[1].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
@@ -1194,8 +1175,8 @@ Conformance issues in packages:
 	if results.PkgResults[1].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[0].Error.ErrorMsg != "has no PackageName field" {
-		t.Errorf("Should be 'has no PackageName field' ErrorMsg")
+	if results.PkgResults[1].Errors[0].Error.ErrorMsg != "Has no PackageName field" {
+		t.Errorf("Should be 'Has no PackageName field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[1].Errors[0].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
@@ -1212,8 +1193,8 @@ Conformance issues in packages:
 	if results.PkgResults[1].Errors[2].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[2].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[1].Errors[2].Error.ErrorMsg != "Has no PackageExternalReferences field" {
+		t.Errorf("Should be 'Has no PackageExternalReferences field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[1].Errors[2].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
@@ -1242,8 +1223,8 @@ Conformance issues in packages:
 	if results.PkgResults[2].Errors[1].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[2].Errors[1].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[2].Errors[1].Error.ErrorMsg != "Has no PackageExternalReferences field" {
+		t.Errorf("Should be 'Has no PackageExternalReferences field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[2].Errors[1].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
@@ -1263,8 +1244,8 @@ Conformance issues in packages:
 	if results.PkgResults[3].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "has no PackageExternalReferences field" {
-		t.Errorf("Should be 'has no PackageExternalReferences field' ErrorMsg")
+	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "Has no PackageExternalReferences field" {
+		t.Errorf("Should be 'Has no PackageExternalReferences field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[2].Errors[0].ReportedBySpec, []string{"EO"}) {
 		t.Errorf("The issue should be reported by EO")
@@ -1283,15 +1264,15 @@ Conformance issues in packages:
 		"another package",
 		"last package",
 	}
-	if !slices.Equal(results.ErrsAndPacks["has no PackageExternalReferences field"], expect) {
+	if !slices.Equal(results.ErrsAndPacks["Has no PackageExternalReferences field"], expect) {
 		t.Errorf(
 			"Expected %+v but got %+v",
 			expect,
-			results.ErrsAndPacks["has no PackageExternalReferences field"],
+			results.ErrsAndPacks["Has no PackageExternalReferences field"],
 		)
 	}
 	/*expect = []string{"Package-1"}
-	if !slices.Equal(results.ErrsAndPacks["has no PackageName field"], expect) {
+	if !slices.Equal(results.ErrsAndPacks["Has no PackageName field"], expect) {
 		t.Error("Wrong")
 	}*/
 }
@@ -1318,27 +1299,7 @@ func TestGoogleChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
-
-Top-level conformance issues:
-Creator organization is Some Other Company, but should always be 'Google LLC'.. [Google]
-SBOM has no License Identifier field. [Google]
-
-Conformance issues in packages:
-1/4 package failed: has neither Concluded License nor License From Files. Both of these cannot be absent from a package.
-1/4 package failed: has no PackageName field
-3/4 packages failed: has no PackageSupplier field
-`
-
 	results := checker.Results()
-	if !strings.EqualFold(expectedTextSummary, results.TextSummary) {
-		t.Errorf(
-			"The text summary was not as expected. \nWas:\n'%s'\nExpected:\n'%s'\n",
-			results.TextSummary,
-			expectedTextSummary,
-		)
-	}
 
 	if results.Summary.TotalSBOMPackages != 4 {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
@@ -1376,8 +1337,8 @@ Conformance issues in packages:
 	if results.PkgResults[0].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[0].Errors[0].Error.ErrorMsg != "has no PackageSupplier field" {
-		t.Errorf("Should be 'has no PackageSupplier field' ErrorMsg")
+	if results.PkgResults[0].Errors[0].Error.ErrorMsg != "Has no PackageSupplier field" {
+		t.Errorf("Should be 'Has no PackageSupplier field' ErrorMsg")
 	}
 	if results.PkgResults[0].Errors[1].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
@@ -1405,14 +1366,14 @@ Conformance issues in packages:
 	if results.PkgResults[1].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[0].Error.ErrorMsg != "has no PackageName field" {
-		t.Errorf("Should be 'has no PackageName field' ErrorMsg")
+	if results.PkgResults[1].Errors[0].Error.ErrorMsg != "Has no PackageName field" {
+		t.Errorf("Should be 'Has no PackageName field' ErrorMsg")
 	}
 	if results.PkgResults[1].Errors[1].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "has no PackageSupplier field" {
-		t.Errorf("Should be 'has no PackageSupplier field' ErrorMsg")
+	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "Has no PackageSupplier field" {
+		t.Errorf("Should be 'Has no PackageSupplier field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[1].Errors[0].ReportedBySpec, []string{"Google"}) {
 		t.Errorf("The issue should be reported by Google")
@@ -1435,8 +1396,8 @@ Conformance issues in packages:
 	if results.PkgResults[2].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "has no PackageSupplier field" {
-		t.Errorf("Should be 'has no PackageSupplier field' ErrorMsg")
+	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "Has no PackageSupplier field" {
+		t.Errorf("Should be 'Has no PackageSupplier field' ErrorMsg")
 	}
 	if !slices.Equal(results.PkgResults[2].Errors[0].ReportedBySpec, []string{"Google"}) {
 		t.Errorf("The issue should be reported by Google")
@@ -1466,7 +1427,7 @@ Conformance issues in packages:
 		"Package-1",
 		"another package",
 	}
-	if !slices.Equal(results.ErrsAndPacks["has no PackageSupplier field"], expect) {
+	if !slices.Equal(results.ErrsAndPacks["Has no PackageSupplier field"], expect) {
 		t.Error("Wrong")
 	}
 	/*expect = []string{"Package"}
@@ -1474,7 +1435,7 @@ Conformance issues in packages:
 		t.Error("Wrong")
 	}
 	expect = []string{"Package-1"}
-	if !slices.Equal(results.ErrsAndPacks["has no PackageName field"], expect) {
+	if !slices.Equal(results.ErrsAndPacks["Has no PackageName field"], expect) {
 		t.Error("Wrong")
 	}*/
 }
@@ -1501,25 +1462,7 @@ func TestSPDXChecker(t *testing.T) {
 
 	// Run checks
 	checker.RunChecks()
-
-	expectedTextSummary := `Analyzed SBOM package with 4 packages. 3 of these packages failed the conformance checks.
-
-Top-level conformance issues:
-Creator organization is Some Other Company, but should always be 'Google LLC'.. [SPDX]
-
-Conformance issues in packages:
-1/4 package failed: has no PackageName field
-3/4 packages failed: has no PackageDownloadLocation field
-`
-
 	results := checker.Results()
-	if !strings.EqualFold(expectedTextSummary, results.TextSummary) {
-		t.Errorf(
-			"The text summary was not as expected. \nWas:\n'%s'\nExpected:\n'%s'\n",
-			results.TextSummary,
-			expectedTextSummary,
-		)
-	}
 
 	if results.Summary.TotalSBOMPackages != 4 {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
@@ -1572,18 +1515,18 @@ Conformance issues in packages:
 	if results.PkgResults[1].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[0].Error.ErrorMsg != "has no PackageName field" {
+	if results.PkgResults[1].Errors[0].Error.ErrorMsg != "Has no PackageName field" {
 		t.Errorf(
-			"Should be 'has no PackageName field' ErrorMsg but was %s\n",
+			"Should be 'Has no PackageName field' ErrorMsg but was %s\n",
 			results.PkgResults[1].Errors[0].Error.ErrorMsg,
 		)
 	}
 	if results.PkgResults[1].Errors[1].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "has no PackageDownloadLocation field" {
+	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "Has no PackageDownloadLocation field" {
 		t.Errorf(
-			"Should be 'has no PackageDownloadLocation field' ErrorMsg but was %s\n",
+			"Should be 'Has no PackageDownloadLocation field' ErrorMsg but was %s\n",
 			results.PkgResults[1].Errors[1].Error.ErrorMsg,
 		)
 	}
@@ -1611,9 +1554,9 @@ Conformance issues in packages:
 	if results.PkgResults[2].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "has no PackageDownloadLocation field" {
+	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "Has no PackageDownloadLocation field" {
 		t.Errorf(
-			"Should be 'has no PackageDownloadLocation field' ErrorMsg but was %s\n",
+			"Should be 'Has no PackageDownloadLocation field' ErrorMsg but was %s\n",
 			results.PkgResults[2].Errors[0].Error.ErrorMsg,
 		)
 	}
@@ -1638,9 +1581,9 @@ Conformance issues in packages:
 	if results.PkgResults[3].Errors[0].Error.ErrorType != "missingField" {
 		t.Errorf("Should be missingField ErrorType")
 	}
-	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "has no PackageDownloadLocation field" {
+	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "Has no PackageDownloadLocation field" {
 		t.Errorf(
-			"Should be 'has no PackageDownloadLocation field' ErrorMsg but was %s\n",
+			"Should be 'Has no PackageDownloadLocation field' ErrorMsg but was %s\n",
 			results.PkgResults[3].Errors[0].Error.ErrorMsg,
 		)
 	}

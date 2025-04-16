@@ -344,52 +344,65 @@ func (checker *BaseChecker) isFailedTopLevelCheck(checkName string) bool {
 	return false
 }
 
-// This is mainly useful for demonstration-purposes.
 func (checker *BaseChecker) TextSummary() string {
-	failedSBOMackages := checker.NumberOfSBOMPackages() - checker.NumberOfCompliantPackages()
-	var sb strings.Builder
-	sb.WriteString(
-		fmt.Sprintf("Analyzed SBOM package with %d packages. ", checker.NumberOfSBOMPackages()),
-	)
-	sb.WriteString(
-		fmt.Sprintf("%d of these packages failed the conformance checks.\n", failedSBOMackages),
-	)
-	sb.WriteString("\nTop-level conformance issues:\n")
-	topLevelIssues := make([]string, 0)
-	for _, issue := range checker.TopLevelResults {
-		issue := fmt.Sprintf("%s. %s",
-			issue.ErrorMessage,
-			issue.NonConformantWithSpecs)
-		topLevelIssues = append(topLevelIssues, issue)
-	}
-	// Sort to make the slice deterministic (which is necessary for testing)
-	slices.Sort(topLevelIssues)
-	for _, topLevelIssue := range topLevelIssues {
-		sb.WriteString(topLevelIssue + "\n")
-	}
-	sb.WriteString("\nConformance issues in packages:\n")
+	var initialStringBuilder strings.Builder
+	initialStringBuilder.WriteString("Summary:\n")
+	sbWithTab := util.StringBuilderWithPrefixAndSuffix(&initialStringBuilder, "\t", "\n")
 
-	pkgLevelIssues := make([]string, 0)
-	for e, p := range checker.ErrsAndPacks {
-		var packageString string
-		if len(p) == 1 {
-			packageString = "package"
-		} else {
-			packageString = "packages"
+	// Summary
+	sbWithTab.Writef(
+		"Analyzed an SBOM with %d package(s). %d top-level conformance check(s)"+
+			" failed. %d package(s) had at least one failing conformance check.",
+		checker.NumberOfSBOMPackages(),
+		len(checker.TopLevelResults),
+		checker.NumberOfSBOMPackages()-checker.NumberOfCompliantPackages(),
+	)
+
+	// Enumerate the failed top-level checks.
+	if len(checker.TopLevelResults) > 0 {
+		initialStringBuilder.WriteString("\n")
+		sbWithTab.Writef("Top-level conformance issues:")
+		topLevelIssues := make([]string, 0)
+		for _, issue := range checker.TopLevelResults {
+			issue := fmt.Sprintf("%s. %s",
+				issue.ErrorMessage,
+				issue.NonConformantWithSpecs)
+			topLevelIssues = append(topLevelIssues, issue)
 		}
-		issue := fmt.Sprintf("%d/%d %s failed: %s",
-			len(p),
-			checker.NumberOfSBOMPackages(),
-			packageString,
-			e)
-		pkgLevelIssues = append(pkgLevelIssues, issue)
-	}
-	slices.Sort(pkgLevelIssues)
-	for _, pkgLevelIssue := range pkgLevelIssues {
-		sb.WriteString(pkgLevelIssue + "\n")
+		// Sort to make the slice deterministic (which is necessary for testing)
+		slices.Sort(topLevelIssues)
+		sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialStringBuilder, "\t- ", "\n")
+		for _, topLevelIssue := range topLevelIssues {
+			sbWithDash.Writef(topLevelIssue)
+		}
 	}
 
-	return sb.String()
+	// Enumerate the failed package-level checks.
+	if len(checker.ErrsAndPacks) > 0 {
+		initialStringBuilder.WriteString("\n")
+		sbWithTab.Writef("Conformance issues in packages:")
+		pkgLevelIssues := make([]string, 0)
+		for e, p := range checker.ErrsAndPacks {
+			var packageString string
+			if checker.NumberOfSBOMPackages() > 1 {
+				packageString = "packages"
+			} else {
+				packageString = "package"
+			}
+			issue := fmt.Sprintf("%s: %d/%d %s failed.",
+				e,
+				len(p),
+				checker.NumberOfSBOMPackages(),
+				packageString)
+			pkgLevelIssues = append(pkgLevelIssues, issue)
+		}
+		slices.Sort(pkgLevelIssues)
+		sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialStringBuilder, "\t- ", "\n")
+		for _, pkgLevelIssue := range pkgLevelIssues {
+			sbWithDash.Writef(pkgLevelIssue)
+		}
+	}
+	return initialStringBuilder.String()
 }
 
 // Checks all specs.

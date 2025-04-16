@@ -1,6 +1,6 @@
 # sbom-conformance
 
-A tool to check the conformance of SBOMs to Google's internal spec, the NTIA Minimum elements specification, and the SPDX requirements.
+A tool to check the conformance of SBOMs to Google's internal spec, the NTIA Minimum Elements specification, and the SPDX requirements.
 
 > [!IMPORTANT]  
 > This library is being developed. It's not recommended to use it yet.
