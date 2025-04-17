@@ -50,12 +50,7 @@ var (
 		"text",
 		"The output format. Options are 'text' or 'json'.",
 	)
-	flagSpecSummary = flag.String(
-		"spec-summary",
-		"",
-		"View summary of a particular spec. Same options as 'specs' flag",
-	)
-	flagTextSummary   = flag.Bool("text-summary", true, "Set to true to get a textual summary")
+	flagTextSummary  = flag.Bool("text-summary", true, "Set to true to get a textual summary")
 	flagGetChecks    = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
 	validFocus       = []string{"package", "error"}
 	validOutput      = []string{"text", "json"}
@@ -101,23 +96,6 @@ func main() {
 	if len(cleanedSpecs) == 0 {
 		fmt.Println("We need at least one spec")
 		return
-	}
-
-	// Get the SpecSummary flags
-	// We validate the specs
-	var specsForSummary []string
-	if *flagSpecSummary != "" {
-		specsForSummary = strings.Split(*flagSpecSummary, ",")
-		specsForSummary := removeDuplicates(specsForSummary)
-		for _, specForSummary := range specsForSummary {
-			if !slices.Contains(validSpecs, specForSummary) {
-				fmt.Println(specForSummary, "is not a valid spec")
-				return
-			}
-			if strings.ToLower(specForSummary) == "all" && len(specsForSummary) != 1 {
-				fmt.Println("If you set --spec-summary to 'all', don't specify other specs")
-			}
-		}
 	}
 
 	if *flagFocus != "package" && *flagFocus != "error" {
@@ -207,46 +185,6 @@ func main() {
 			getChecks.WriteString(checkLine.String())
 		}
 		fmt.Println(getChecks.String())
-	}
-
-	// Print spec stats
-	if len(specsForSummary) != 0 {
-		var specsSummary strings.Builder
-		result := checker.Results()
-		if strings.ToLower(specsForSummary[0]) == "all" {
-			for specName, cir := range result.Summary.SpecSummaries {
-				var conformant string
-				if cir.Conformant {
-					conformant = fmt.Sprintf("Conformant %s", greenCheck)
-				} else {
-					conformant = fmt.Sprintf("NOT conformant %s", redCross)
-				}
-				specsSummary.WriteString(fmt.Sprintf("%s: %d/%d checks passed | %s\n",
-					specName,
-					cir.PassedChecks,
-					cir.TotalChecks,
-					conformant))
-			}
-		} else {
-			for _, chosenSpec := range specsForSummary {
-				for specName, cir := range result.Summary.SpecSummaries {
-					if strings.EqualFold(specName, chosenSpec) {
-						var conformant string
-						if cir.Conformant {
-							conformant = fmt.Sprintf("Conformant %s", greenCheck)
-						} else {
-							conformant = fmt.Sprintf("NOT conformant %s", redCross)
-						}
-						specsSummary.WriteString(fmt.Sprintf("%s: %d/%d checks passed | %s\n",
-							specName,
-							cir.PassedChecks,
-							cir.TotalChecks,
-							conformant))
-					}
-				}
-			}
-		}
-		fmt.Println(specsSummary.String())
 	}
 
 	if *flagFocus == "package" {
