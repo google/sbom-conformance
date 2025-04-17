@@ -26,6 +26,7 @@ import (
 
 	"github.com/google/sbom-conformance/pkg/checkers/base"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
+	"github.com/google/sbom-conformance/pkg/util"
 )
 
 //nolint:all
@@ -187,19 +188,24 @@ func main() {
 		// List all packages that have errors
 		// Issues in packages
 
+		initialSB := strings.Builder{}
+    initialSB.WriteString("Packages\n")
+		sbWithTab := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t", "\n")
 		if chosenOutput == "text" {
 			for _, pack := range checker.PkgResults {
 				if len(pack.Errors) == 0 {
 					continue
 				}
-				fmt.Println("\npackage", pack.Package.Name, ": ")
+				// TODO - appending SPDXRef here isn't ideal. The library should support
+				// recovering the original text somehow.
+				sbWithTab.Writef("package SPDXRef-%v:", pack.Package.SpdxID)
+				sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t- ", "\n")
 				for _, packageError := range pack.Errors {
-					fmt.Println("  error: ",
-						packageError.Error.ErrorMsg,
-						"\n     required by spec(s): ",
-						packageError.ReportedBySpec)
+					sbWithDash.Writef("%v %v", packageError.Error.ErrorMsg, packageError.ReportedBySpec)
 				}
+        initialSB.WriteString("\n")
 			}
+      fmt.Println(initialSB.String())
 		} else {
 			output := types.OutputFromInput(
 				checker.PkgResults, nil,
