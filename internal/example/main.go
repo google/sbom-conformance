@@ -40,10 +40,10 @@ var (
 		"all",
 		"The specs to check. Options are: 'google', 'eo', 'spdx', 'all' (default).",
 	)
-	flagFocus = flag.String(
-		"focus",
-		"package",
-		"The focus for the output. 'package' display each failing package and the errors it has. 'error' display a list of the found issues and the packages that has that issue.",
+	flagPackages = flag.Bool(
+		"packages",
+		false,
+		"List the packages that failed checks",
 	)
 	flagOutput = flag.String(
 		"output",
@@ -96,10 +96,6 @@ func main() {
 	if len(cleanedSpecs) == 0 {
 		fmt.Println("We need at least one spec")
 		return
-	}
-
-	if *flagFocus != "package" && *flagFocus != "error" {
-		fmt.Println("The --focus flag needs to be either 'package' or 'error'")
 	}
 
 	addSpecs := make([]func(*base.BaseChecker), 0)
@@ -187,7 +183,7 @@ func main() {
 		fmt.Println(getChecks.String())
 	}
 
-	if *flagFocus == "package" {
+	if *flagPackages {
 		// List all packages that have errors
 		// Issues in packages
 
@@ -204,55 +200,9 @@ func main() {
 						packageError.ReportedBySpec)
 				}
 			}
-
-			// Issues in top-level fields
-			fmt.Println("\nTop-level issues:")
-			for _, issue := range checker.TopLevelResults {
-				fmt.Println("Issue:\n  ",
-					issue.ErrorMessage,
-					"\n   NonConformant With Specs: ",
-					issue.NonConformantWithSpecs)
-			}
 		} else {
 			output := types.OutputFromInput(
 				checker.PkgResults, nil,
-				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
-				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
-			)
-			jsonBytes, err := json.MarshalIndent(output, "", "  ")
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(string(jsonBytes))
-		}
-	} else if *flagFocus == "error" {
-		if chosenOutput == "text" {
-			for e, p := range checker.ErrsAndPacks {
-				var packageString string
-				if len(p) == 1 {
-					packageString = "package"
-				} else {
-					packageString = "packages"
-				}
-				fmt.Printf("%s --- affects %d/%d %s\n",
-					e,
-					len(p),
-					checker.NumberOfSBOMPackages(),
-					packageString)
-			}
-
-			// Issues in top-level fields
-			fmt.Println("\nTop-level issues:")
-			for _, issue := range checker.TopLevelResults {
-				fmt.Println("Issue:\n  ",
-					issue.ErrorMessage,
-					"\n   NonConformant With Specs: ",
-					issue.NonConformantWithSpecs)
-			}
-		} else {
-			output := types.OutputFromInput(
-				nil, checker.ErrsAndPacks,
 				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
 				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
 			)
