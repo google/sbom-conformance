@@ -85,7 +85,7 @@ results.PackageLevelChecks
 
 name: `EO`
 
-A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf.
+A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf. The checker in this library verifies the minimum required "Data Fields", but not the minimum required "Automation Support" or the minimum required "Practices and Processes".
 
 #### Author
 
@@ -94,6 +94,16 @@ This refers to the "Author of SBOM Data" data field in the NTIA specification. I
 #### Timestamp
 
 This refers to the "Timestamp" data field in the NTIA specification. It is a top-level check that passes if the [Created](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#69-created-field) field is present and non-empty.
+
+#### Relationships
+
+This refers to the "Dependency Relationship" data field in the NTIA specification. It is a top-level check that passes if every package is a member of some [Relationship](https://spdx.github.io/spdx-spec/v2.3/relationships-between-SPDX-elements/). The check does not require a specific `relationshipType`.
+
+In the case that a package has no relationships, `NONE` can be used for `spdxElementId` or for `relatedSpdxElement`, and the check will pass for the package.
+
+This is one interpretation of the NTIA specification. It differs from the SPDX intepretation ([defined here](https://spdx.github.io/spdx-spec/v2.3/how-to-use/#k2-satisfying-ntia-minimum-elements-for-an-sbom-using-spdx)), possibly because this library's intepretation does not factor in documents such as [Framing Software Component Transparency: Establishing a Common Software Bill of Material (SBOM)](https://www.ntia.gov/files/ntia/publications/framingsbom_20191112.pdf).
+
+TODO: the `NOASSERTION` behavior should be made consistent with the other checks.
 
 #### Name
 
@@ -114,7 +124,5 @@ This refers to the "Supplier Name" data field in the NTIA specification. It is a
 This refers to the "Other Unique Identifiers" data field in the NTIA specification. It is a package-level check that passes if the [External References](https://spdx.github.io/spdx-spec/v2.3/package-information/#721-external-reference-field) field is present and non-empty.
 
 ## Disclaimer
-
-This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).

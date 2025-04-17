@@ -459,8 +459,8 @@ func TestEOTopLevelChecks(t *testing.T) {
 					Specs:  []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOMs packages are correctly formatted",
-					Passed: true,
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: false,
 					Specs:  []string{"EO"},
 				},
 			},
@@ -477,6 +477,50 @@ func TestEOTopLevelChecks(t *testing.T) {
 				"packages": [{
 					"name": "Foo",
 					"SPDXID": "SPDXRef-foo"
+				}],
+				"relationships": []
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Not all packages have a relationship",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": [],
+					"created": ""
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						},
+ 						{
+								"name": "Bar",
+								"SPDXID": "SPDXRef-bar"
+						}
+				],
+				"relationships": [{
+					"spdxElementId": "SPDXRef-Document",
+					"relationshipType": "DESCRIBES",
+					"relatedSpdxElement": "SPDXRef-foo"
 				}]
 			}`,
 			expected: []*types.TopLevelCheckResult{
@@ -491,14 +535,14 @@ func TestEOTopLevelChecks(t *testing.T) {
 					Specs:  []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOMs packages are correctly formatted",
-					Passed: true,
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: false,
 					Specs:  []string{"EO"},
 				},
 			},
 		},
 		{
-			name: "Author and timestamp checks pass",
+			name: "Author, timestamp, and relationship checks pass",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
@@ -506,10 +550,28 @@ func TestEOTopLevelChecks(t *testing.T) {
 					"creators": ["Organization: Foo"],
 					"created": "some timestamp"
 				},
-				"packages": [{
-					"name": "Foo",
-					"SPDXID": "SPDXRef-foo"
-				}]
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						},
+ 						{
+								"name": "Bar",
+								"SPDXID": "SPDXRef-bar"
+						}
+				],
+				"relationships": [
+ 						{
+								"spdxElementId": "SPDXRef-Document",
+								"relationshipType": "DESCRIBES",
+								"relatedSpdxElement": "SPDXRef-foo"
+						},
+ 						{
+								"spdxElementId": "SPDXRef-bar",
+								"relationshipType": "DEPENDS_ON",
+								"relatedSpdxElement": "SPDXRef-foo"
+						}
+				]
 			}`,
 			expected: []*types.TopLevelCheckResult{
 				{
@@ -523,7 +585,57 @@ func TestEOTopLevelChecks(t *testing.T) {
 					Specs:  []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOMs packages are correctly formatted",
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Relationship check allows any relationship type and NONE components",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "some timestamp"
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						},
+ 						{
+								"name": "Bar",
+								"SPDXID": "SPDXRef-bar"
+						}
+				],
+				"relationships": [
+ 						{
+								"spdxElementId": "SPDXRef-Document",
+								"relationshipType": "OPTIONAL_COMPONENT_OF",
+								"relatedSpdxElement": "SPDXRef-foo"
+						},
+ 						{
+								"spdxElementId": "SPDXRef-bar",
+								"relationshipType": "DEPENDS_ON",
+								"relatedSpdxElement": "NONE"
+						}
+				]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that each SBOM package has a relationship",
 					Passed: true,
 					Specs:  []string{"EO"},
 				},

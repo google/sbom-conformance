@@ -15,25 +15,55 @@
 package eo
 
 import (
+	"fmt"
+
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
-func checkRelationshipsFields(
+func checkPackagesHaveRelationships(
 	doc *v23.Document,
 	spec string,
 ) []*types.NonConformantField {
-	issues := make([]*types.NonConformantField, 0)
+	// packagesInRelationships maps spdxIDs to whether a relationship exists for
+	// that package
+	packagesInRelationships := map[string]bool{}
+	for _, pkg := range doc.Packages {
+		packagesInRelationships[string(pkg.PackageSPDXIdentifier)] = false
+	}
 	for _, relationship := range doc.Relationships {
-		// Check the relationship type
-		if !util.IsValidString(relationship.Relationship) {
-			issue := types.CreateWronglyFormattedFieldError(types.RelationshipType,
-				spec)
-			issues = append(issues, issue)
+		// DocumentRefID is empty if the reference is an element of the current SBOM.
+		// Only packages defined in the current SBOM are present in
+		// packagesInRelationships, so there's no need to check packagesInRelationships
+		// if DocumentRefID is not empty.
+		if relationship.RefA.DocumentRefID == "" {
+			packagesInRelationships[string(relationship.RefA.ElementRefID)] = true
+		}
+		if relationship.RefB.DocumentRefID == "" {
+			packagesInRelationships[string(relationship.RefB.ElementRefID)] = true
 		}
 	}
-	return issues
+	var packagesMissingRelationships int
+	for _, inRelationship := range packagesInRelationships {
+		if !inRelationship {
+			packagesMissingRelationships++
+		}
+	}
+
+	if packagesMissingRelationships == 0 {
+		return nil
+	}
+	return []*types.NonConformantField{{
+		Error: &types.FieldError{
+			ErrorType: "missingRelationship",
+			ErrorMsg: fmt.Sprintf(
+				"%v packages are not in any relationships",
+				packagesMissingRelationships,
+			),
+		},
+		ReportedBySpec: []string{spec},
+	}}
 }
 
 func MustHaveTimestamp(sbom *v23.Document, spec string) []*types.NonConformantField {
