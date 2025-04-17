@@ -44,8 +44,7 @@ var (
 		false,
 		"List the packages that failed checks",
 	)
-	flagTextSummary  = flag.Bool("text-summary", true, "Set to true to get a textual summary")
-	flagGetChecks    = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
+	flagGetChecks    = flag.Bool("get-checks", false, "Print the checks in the analysis")
 	validFocus       = []string{"package", "error"}
 	validOutput      = []string{"text", "json"}
 	validSpecs       = []string{"google", "eo", "spdx", "all"}
@@ -122,9 +121,7 @@ func main() {
 	////                          ////
 	//////////////////////////////////
 
-	if *flagTextSummary {
-		fmt.Println(checker.Results().TextSummary)
-	}
+	fmt.Println(checker.Results().TextSummary)
 
 	if *flagGetChecks {
 		writeCheckName := func(checkName string, specs []string, checkLine *strings.Builder) {
