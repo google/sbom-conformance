@@ -15,7 +15,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"html"
@@ -25,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/google/sbom-conformance/pkg/checkers/base"
-	types "github.com/google/sbom-conformance/pkg/checkers/types"
+	"github.com/google/sbom-conformance/pkg/util"
 )
 
 //nolint:all
@@ -40,28 +39,12 @@ var (
 		"all",
 		"The specs to check. Options are: 'google', 'eo', 'spdx', 'all' (default).",
 	)
-	flagFocus = flag.String(
-		"focus",
-		"package",
-		"The focus for the output. 'package' display each failing package and the errors it has. 'error' display a list of the found issues and the packages that has that issue.",
-	)
-	flagOutput = flag.String(
-		"output",
-		"text",
-		"The output format. Options are 'text' or 'json'.",
-	)
-	flagSpecSummary = flag.String(
-		"spec-summary",
-		"",
-		"View summary of a particular spec. Same options as 'specs' flag",
-	)
-	flagTextSummary   = flag.Bool("text-summary", true, "Set to true to get a textual summary")
-	flagGetAllResults = flag.Bool(
-		"get-all-results",
+	flagPackages = flag.Bool(
+		"packages",
 		false,
-		"Enable to get all results in JSON format",
+		"List the packages that failed checks",
 	)
-	flagGetChecks    = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
+	flagGetChecks    = flag.Bool("get-checks", false, "Print the checks in the analysis")
 	validFocus       = []string{"package", "error"}
 	validOutput      = []string{"text", "json"}
 	validSpecs       = []string{"google", "eo", "spdx", "all"}
@@ -76,16 +59,6 @@ func main() {
 	flag.Parse()
 	if *flagSbom == "" {
 		fmt.Println("You need to provide an SBOM.")
-		return
-	}
-	output := strings.Split(*flagOutput, ",")
-	if len(output) != 1 {
-		fmt.Println("You can only choose one output format")
-		return
-	}
-	chosenOutput := output[0]
-	if !slices.Contains(validOutput, chosenOutput) {
-		fmt.Println("You have to choose any of the following as the output: ", validOutput)
 		return
 	}
 
@@ -106,27 +79,6 @@ func main() {
 	if len(cleanedSpecs) == 0 {
 		fmt.Println("We need at least one spec")
 		return
-	}
-
-	// Get the SpecSummary flags
-	// We validate the specs
-	var specsForSummary []string
-	if *flagSpecSummary != "" {
-		specsForSummary = strings.Split(*flagSpecSummary, ",")
-		specsForSummary := removeDuplicates(specsForSummary)
-		for _, specForSummary := range specsForSummary {
-			if !slices.Contains(validSpecs, specForSummary) {
-				fmt.Println(specForSummary, "is not a valid spec")
-				return
-			}
-			if strings.ToLower(specForSummary) == "all" && len(specsForSummary) != 1 {
-				fmt.Println("If you set --spec-summary to 'all', don't specify other specs")
-			}
-		}
-	}
-
-	if *flagFocus != "package" && *flagFocus != "error" {
-		fmt.Println("The --focus flag needs to be either 'package' or 'error'")
 	}
 
 	addSpecs := make([]func(*base.BaseChecker), 0)
@@ -169,20 +121,7 @@ func main() {
 	////                          ////
 	//////////////////////////////////
 
-	numberOfFailedPkgs := checker.NumberOfSBOMPackages() - checker.NumberOfCompliantPackages()
-
-	if *flagTextSummary {
-		fmt.Println(checker.Results().TextSummary)
-	}
-
-	if *flagGetAllResults {
-		b, err := json.MarshalIndent(checker.Results(), "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(b))
-		return
-	}
+	fmt.Println(checker.Results().TextSummary)
 
 	if *flagGetChecks {
 		writeCheckName := func(checkName string, specs []string, checkLine *strings.Builder) {
@@ -223,122 +162,25 @@ func main() {
 		fmt.Println(getChecks.String())
 	}
 
-	// Print spec stats
-	if len(specsForSummary) != 0 {
-		var specsSummary strings.Builder
-		result := checker.Results()
-		if strings.ToLower(specsForSummary[0]) == "all" {
-			for specName, cir := range result.Summary.SpecSummaries {
-				var conformant string
-				if cir.Conformant {
-					conformant = fmt.Sprintf("Conformant %s", greenCheck)
-				} else {
-					conformant = fmt.Sprintf("NOT conformant %s", redCross)
-				}
-				specsSummary.WriteString(fmt.Sprintf("%s: %d/%d checks passed | %s\n",
-					specName,
-					cir.PassedChecks,
-					cir.TotalChecks,
-					conformant))
+	if *flagPackages {
+		initialSB := strings.Builder{}
+		initialSB.WriteString("Packages\n")
+		sbWithTab := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t", "\n")
+
+		for _, pack := range checker.PkgResults {
+			if len(pack.Errors) == 0 {
+				continue
 			}
-		} else {
-			for _, chosenSpec := range specsForSummary {
-				for specName, cir := range result.Summary.SpecSummaries {
-					if strings.EqualFold(specName, chosenSpec) {
-						var conformant string
-						if cir.Conformant {
-							conformant = fmt.Sprintf("Conformant %s", greenCheck)
-						} else {
-							conformant = fmt.Sprintf("NOT conformant %s", redCross)
-						}
-						specsSummary.WriteString(fmt.Sprintf("%s: %d/%d checks passed | %s\n",
-							specName,
-							cir.PassedChecks,
-							cir.TotalChecks,
-							conformant))
-					}
-				}
+			// TODO - appending SPDXRef here isn't ideal. The library should support
+			// recovering the original text somehow.
+			sbWithTab.Writef("package SPDXRef-%v:", pack.Package.SpdxID)
+			sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t- ", "\n")
+			for _, packageError := range pack.Errors {
+				sbWithDash.Writef("%v %v", packageError.Error.ErrorMsg, packageError.ReportedBySpec)
 			}
+			initialSB.WriteString("\n")
 		}
-		fmt.Println(specsSummary.String())
-	}
-
-	if *flagFocus == "package" {
-		// List all packages that have errors
-		// Issues in packages
-
-		if chosenOutput == "text" {
-			for _, pack := range checker.PkgResults {
-				if len(pack.Errors) == 0 {
-					continue
-				}
-				fmt.Println("\npackage", pack.Package.Name, ": ")
-				for _, packageError := range pack.Errors {
-					fmt.Println("  error: ",
-						packageError.Error.ErrorMsg,
-						"\n     required by spec(s): ",
-						packageError.ReportedBySpec)
-				}
-			}
-
-			// Issues in top-level fields
-			fmt.Println("\nTop-level issues:")
-			for _, issue := range checker.TopLevelResults {
-				fmt.Println("Issue:\n  ",
-					issue.ErrorMessage,
-					"\n   NonConformant With Specs: ",
-					issue.NonConformantWithSpecs)
-			}
-		} else {
-			output := types.OutputFromInput(
-				checker.PkgResults, nil,
-				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
-				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
-			)
-			jsonBytes, err := json.MarshalIndent(output, "", "  ")
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(string(jsonBytes))
-		}
-	} else if *flagFocus == "error" {
-		if chosenOutput == "text" {
-			for e, p := range checker.ErrsAndPacks {
-				var packageString string
-				if len(p) == 1 {
-					packageString = "package"
-				} else {
-					packageString = "packages"
-				}
-				fmt.Printf("%s --- affects %d/%d %s\n",
-					e,
-					len(p),
-					checker.NumberOfSBOMPackages(),
-					packageString)
-			}
-
-			// Issues in top-level fields
-			fmt.Println("\nTop-level issues:")
-			for _, issue := range checker.TopLevelResults {
-				fmt.Println("Issue:\n  ",
-					issue.ErrorMessage,
-					"\n   NonConformant With Specs: ",
-					issue.NonConformantWithSpecs)
-			}
-		} else {
-			output := types.OutputFromInput(
-				nil, checker.ErrsAndPacks,
-				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
-				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
-			)
-			jsonBytes, err := json.MarshalIndent(output, "", "  ")
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(string(jsonBytes))
-		}
+		fmt.Println(initialSB.String())
 	}
 }
 

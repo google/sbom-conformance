@@ -352,11 +352,24 @@ func (checker *BaseChecker) TextSummary() string {
 	// Summary
 	sbWithTab.Writef(
 		"Analyzed an SBOM with %d package(s). %d top-level conformance check(s)"+
-			" failed. %d package(s) had at least one failing conformance check.",
+			" failed. %d package(s) had at least one failing conformance check.\n",
 		checker.NumberOfSBOMPackages(),
 		len(checker.TopLevelResults),
 		checker.NumberOfSBOMPackages()-checker.NumberOfCompliantPackages(),
 	)
+	for spec, specSummary := range checker.SpecSummaries() {
+		status := "failed"
+		if specSummary.Conformant {
+			status = "passed"
+		}
+		sbWithTab.Writef(
+			"The %s spec %v. %v/%v checks passed.",
+			spec,
+			status,
+			specSummary.PassedChecks,
+			specSummary.TotalChecks,
+		)
+	}
 
 	// Enumerate the failed top-level checks.
 	if len(checker.TopLevelResults) > 0 {
