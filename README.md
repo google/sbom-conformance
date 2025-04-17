@@ -21,9 +21,9 @@ Run `go run main.go -h` to see the supported options.
 
 ### Programmatic
 
-#### Create a `BaseChecker`
+#### Initialization
 
-The `BaseChecker` does the analysis of SBOMs. To create one that checks the Google Style Guide, the NTIA Minimum Elements, and SPDX requirements, do the following:
+The `BaseChecker` does the analysis of SBOMs. The following code creates a base checker, runs it, and generates the results.
 
 ```go
 import (
@@ -34,56 +34,33 @@ checker := base.NewChecker(base.WithGoogleChecker(),
                            base.WithEOChecker(),
                            base.WithSPDXChecker())
 
+checker.RunChecks()
+
+results := checker.Results()
 
 ```
 
 You can choose any of the supported specs.
 
-#### Run checks and view results
+#### Accessing the Results
 
-With a `BaseChecker`, we can now run all top-level checks and package-level checks:
-
-```go
-
-checker.RunChecks()
-
-```
-
-After that, you can get information about the SBOM and its conformance.
-
-##### Results
-
-###### Create the results
-
-```go
-results := checker.Results()
-```
-
-###### Text summary
-
-Get a text summary of the SBOM and the conformance checks.
+Text Summary:
 
 ```go
 results.TextSummary
 ```
 
-###### Structured summary
-
-Get a structured summary of the SBOM and the conformance checks.
+Structured summary of the SBOM and the conformance checks:
 
 ```go
 results.Summary
 ```
 
-###### Get top-level results
-
-Get the results of the top-level conformance checks.
+Results of the top-level conformance checks:
 
 ```go
 results.TopLevelChecks
 ```
-
-###### Get package results
 
 There are two ways to get the results of the package-level conformance checks.
 
