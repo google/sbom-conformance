@@ -56,11 +56,6 @@ var (
 		"View summary of a particular spec. Same options as 'specs' flag",
 	)
 	flagTextSummary   = flag.Bool("text-summary", true, "Set to true to get a textual summary")
-	flagGetAllResults = flag.Bool(
-		"get-all-results",
-		false,
-		"Enable to get all results in JSON format",
-	)
 	flagGetChecks    = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
 	validFocus       = []string{"package", "error"}
 	validOutput      = []string{"text", "json"}
@@ -173,15 +168,6 @@ func main() {
 
 	if *flagTextSummary {
 		fmt.Println(checker.Results().TextSummary)
-	}
-
-	if *flagGetAllResults {
-		b, err := json.MarshalIndent(checker.Results(), "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(b))
-		return
 	}
 
 	if *flagGetChecks {
