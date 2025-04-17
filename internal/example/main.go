@@ -15,7 +15,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"html"
@@ -25,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/google/sbom-conformance/pkg/checkers/base"
-	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 )
 
@@ -46,11 +44,6 @@ var (
 		false,
 		"List the packages that failed checks",
 	)
-	flagOutput = flag.String(
-		"output",
-		"text",
-		"The output format. Options are 'text' or 'json'.",
-	)
 	flagTextSummary  = flag.Bool("text-summary", true, "Set to true to get a textual summary")
 	flagGetChecks    = flag.Bool("get-checks", false, "Prints the checks in the analysis if true")
 	validFocus       = []string{"package", "error"}
@@ -67,16 +60,6 @@ func main() {
 	flag.Parse()
 	if *flagSbom == "" {
 		fmt.Println("You need to provide an SBOM.")
-		return
-	}
-	output := strings.Split(*flagOutput, ",")
-	if len(output) != 1 {
-		fmt.Println("You can only choose one output format")
-		return
-	}
-	chosenOutput := output[0]
-	if !slices.Contains(validOutput, chosenOutput) {
-		fmt.Println("You have to choose any of the following as the output: ", validOutput)
 		return
 	}
 
@@ -139,8 +122,6 @@ func main() {
 	////                          ////
 	//////////////////////////////////
 
-	numberOfFailedPkgs := checker.NumberOfSBOMPackages() - checker.NumberOfCompliantPackages()
-
 	if *flagTextSummary {
 		fmt.Println(checker.Results().TextSummary)
 	}
@@ -185,40 +166,24 @@ func main() {
 	}
 
 	if *flagPackages {
-		// List all packages that have errors
-		// Issues in packages
-
 		initialSB := strings.Builder{}
-    initialSB.WriteString("Packages\n")
+		initialSB.WriteString("Packages\n")
 		sbWithTab := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t", "\n")
-		if chosenOutput == "text" {
-			for _, pack := range checker.PkgResults {
-				if len(pack.Errors) == 0 {
-					continue
-				}
-				// TODO - appending SPDXRef here isn't ideal. The library should support
-				// recovering the original text somehow.
-				sbWithTab.Writef("package SPDXRef-%v:", pack.Package.SpdxID)
-				sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t- ", "\n")
-				for _, packageError := range pack.Errors {
-					sbWithDash.Writef("%v %v", packageError.Error.ErrorMsg, packageError.ReportedBySpec)
-				}
-        initialSB.WriteString("\n")
+
+		for _, pack := range checker.PkgResults {
+			if len(pack.Errors) == 0 {
+				continue
 			}
-      fmt.Println(initialSB.String())
-		} else {
-			output := types.OutputFromInput(
-				checker.PkgResults, nil,
-				checker.NumberOfSBOMPackages(), numberOfFailedPkgs,
-				checker.GetTopLevelChecks(), checker.GetPackageLevelChecks(),
-			)
-			jsonBytes, err := json.MarshalIndent(output, "", "  ")
-			if err != nil {
-				fmt.Println(err)
-				return
+			// TODO - appending SPDXRef here isn't ideal. The library should support
+			// recovering the original text somehow.
+			sbWithTab.Writef("package SPDXRef-%v:", pack.Package.SpdxID)
+			sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialSB, "\t- ", "\n")
+			for _, packageError := range pack.Errors {
+				sbWithDash.Writef("%v %v", packageError.Error.ErrorMsg, packageError.ReportedBySpec)
 			}
-			fmt.Println(string(jsonBytes))
+			initialSB.WriteString("\n")
 		}
+		fmt.Println(initialSB.String())
 	}
 }
 
