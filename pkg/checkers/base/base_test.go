@@ -396,6 +396,23 @@ func TestParseFailure(t *testing.T) {
 				}]
 			}`,
 		},
+		{
+			name: "Missing spdxVersion causes parse failure",
+			sbom: `{
+				"name": "SimpleSBOM",
+				"packages": [{
+					"name": "Foo",
+					"SPDXID": "SPDXRef-foo",
+					"versionInfo": "v1",
+					"supplier": "not an organization",
+					"externalRefs": [{
+						"referenceCategory": "PACKAGE-MANAGER", 
+						"referenceType": "purl",
+						"referenceLocator": "pkg:foo"
+					}]
+				}]
+			}`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -432,11 +449,6 @@ func TestEOTopLevelChecks(t *testing.T) {
 			}`,
 			expected: []*types.TopLevelCheckResult{
 				{
-					Name:   "Check that the SBOM has an SPDX version",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
 					Name:   "Check that the SBOM has at least one creator",
 					Passed: false,
 					Specs:  []string{"EO"},
@@ -469,11 +481,6 @@ func TestEOTopLevelChecks(t *testing.T) {
 			}`,
 			expected: []*types.TopLevelCheckResult{
 				{
-					Name:   "Check that the SBOM has an SPDX version",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
 					Name:   "Check that the SBOM has at least one creator",
 					Passed: false,
 					Specs:  []string{"EO"},
@@ -505,11 +512,6 @@ func TestEOTopLevelChecks(t *testing.T) {
 				}]
 			}`,
 			expected: []*types.TopLevelCheckResult{
-				{
-					Name:   "Check that the SBOM has an SPDX version",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
 				{
 					Name:   "Check that the SBOM has at least one creator",
 					Passed: true,
@@ -1130,8 +1132,8 @@ func TestEOChecker(t *testing.T) {
 		t.Errorf("The 'EO' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["EO"].Conformant)
 	}
-	if results.Summary.SpecSummaries["EO"].PassedChecks != 5 {
-		t.Errorf("The 'EO' spec summary should be PassedChecks=5 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["EO"].PassedChecks != 4 {
+		t.Errorf("The 'EO' spec summary should be PassedChecks=4 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["EO"].PassedChecks)
 	}
 	if len(results.PkgResults) != results.Summary.FailedSBOMPackages {
