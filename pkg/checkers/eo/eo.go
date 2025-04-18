@@ -42,8 +42,8 @@ func (eoChecker *EOChecker) InitChecks() {
 			Impl: MustHaveTimestamp,
 		},
 		{
-			Name: "Check that the SBOMs packages are correctly formatted",
-			Impl: checkRelationshipsFields,
+			Name: "Check that each SBOM package has a relationship",
+			Impl: checkPackagesHaveRelationships,
 		},
 	}
 	eoChecker.TopLevelChecks = topLevelChecks

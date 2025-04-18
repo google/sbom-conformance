@@ -15,25 +15,80 @@
 package eo
 
 import (
+	"fmt"
+
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
-func checkRelationshipsFields(
+func checkPackagesHaveRelationships(
 	doc *v23.Document,
 	spec string,
 ) []*types.NonConformantField {
-	issues := make([]*types.NonConformantField, 0)
+	// packagesInRelationships maps spdxIDs to whether a relationship exists for
+	// that package
+	packagesInRelationships := map[string]bool{}
+	for _, pkg := range doc.Packages {
+		packagesInRelationships[string(pkg.PackageSPDXIdentifier)] = false
+	}
 	for _, relationship := range doc.Relationships {
-		// Check the relationship type
-		if !util.IsValidString(relationship.Relationship) {
-			issue := types.CreateWronglyFormattedFieldError(types.RelationshipType,
-				spec)
-			issues = append(issues, issue)
+		if relationship == nil {
+			// untested; not clear how to cause this
+			continue
+		}
+
+		// If a package reference is NONE or is NOASSERTION, then ElementRefID will
+		// be empty and SpecialID will be NONE or NOASSERTION. We prefer to handle
+		// these possibilities as a single value.
+		refA := string(relationship.RefA.ElementRefID)
+		if specialID := relationship.RefA.SpecialID; specialID != "" {
+			refA = specialID
+		}
+		refB := string(relationship.RefB.ElementRefID)
+		if specialID := relationship.RefB.SpecialID; specialID != "" {
+			refB = specialID
+		}
+
+		// the relationship shouldn't count if both sides of the relationship are
+		// the same
+		if refA == refB {
+			continue
+		}
+
+		// DocumentRefID is empty if the reference is an element of the current SBOM.
+		// Only packages defined in the current SBOM are present in
+		// packagesInRelationships, so there's no need to check packagesInRelationships
+		// if DocumentRefID is not empty.
+		if relationship.RefA.DocumentRefID == "" {
+			// this might add NONE and NOASSERTION to the map, but it doesn't matter
+			packagesInRelationships[refA] = true
+		}
+		if relationship.RefB.DocumentRefID == "" {
+			// this might add NONE and NOASSERTION to the map, but it doesn't matter
+			packagesInRelationships[refB] = true
 		}
 	}
-	return issues
+	var packagesMissingRelationships int
+	for _, inRelationship := range packagesInRelationships {
+		if !inRelationship {
+			packagesMissingRelationships++
+		}
+	}
+
+	if packagesMissingRelationships == 0 {
+		return nil
+	}
+	return []*types.NonConformantField{{
+		Error: &types.FieldError{
+			ErrorType: "missingRelationship",
+			ErrorMsg: fmt.Sprintf(
+				"%v packages are not in any relationships",
+				packagesMissingRelationships,
+			),
+		},
+		ReportedBySpec: []string{spec},
+	}}
 }
 
 func MustHaveTimestamp(sbom *v23.Document, spec string) []*types.NonConformantField {
