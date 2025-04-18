@@ -45,8 +45,6 @@ var (
 		"List the packages that failed checks",
 	)
 	flagGetChecks    = flag.Bool("get-checks", false, "Print the checks in the analysis")
-	validFocus       = []string{"package", "error"}
-	validOutput      = []string{"text", "json"}
 	validSpecs       = []string{"google", "eo", "spdx", "all"}
 	greenCheckHex, _ = strconv.ParseInt("0x00002705", 0, 32)
 	greenCheck       = html.UnescapeString(fmt.Sprint(rune(greenCheckHex)))
