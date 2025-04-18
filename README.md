@@ -12,9 +12,9 @@ sbom-conformance is a library and a CLI.
 ### Interactive
 
 ```
-git clone git@github.com:google/sbom-conformance.git
+go install github.com/google/sbom-conformance@latest
 
-cd sbom-conformance && go run main.go -specs eo -sbom testdata/sboms/simple.json
+sbom-conformance -specs eo -sbom <path to sbom>
 ```
 
 Run `go run main.go -h` to see the supported options.
