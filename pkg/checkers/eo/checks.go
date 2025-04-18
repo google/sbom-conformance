@@ -17,6 +17,7 @@ package eo
 import (
 	"fmt"
 
+	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
@@ -56,16 +57,20 @@ func checkPackagesHaveRelationships(
 			continue
 		}
 
+		if refA == common.NoAssertion || refB == common.NoAssertion {
+			continue
+		}
+
 		// DocumentRefID is empty if the reference is an element of the current SBOM.
 		// Only packages defined in the current SBOM are present in
 		// packagesInRelationships, so there's no need to check packagesInRelationships
 		// if DocumentRefID is not empty.
 		if relationship.RefA.DocumentRefID == "" {
-			// this might add NONE and NOASSERTION to the map, but it doesn't matter
+			// this might add NONE to the map, but it doesn't matter
 			packagesInRelationships[refA] = true
 		}
 		if relationship.RefB.DocumentRefID == "" {
-			// this might add NONE and NOASSERTION to the map, but it doesn't matter
+			// this might add NONE to the map, but it doesn't matter
 			packagesInRelationships[refB] = true
 		}
 	}
@@ -103,7 +108,9 @@ func MustHaveSupplier(
 	spec, checkName string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if sbomPack.PackageSupplier == nil || sbomPack.PackageSupplier.Supplier == "" {
+	if sbomPack.PackageSupplier == nil ||
+		sbomPack.PackageSupplier.Supplier == "" ||
+		sbomPack.PackageSupplier.Supplier == common.NoAssertion {
 		issue := missingPackageSupplier(spec)
 		issue.CheckName = checkName
 		issues = append(issues, issue)

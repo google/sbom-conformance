@@ -745,6 +745,47 @@ func TestEOTopLevelChecks(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "NOASSERTION is not allowed for relationship check",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "some timestamp"
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						}
+				],
+				"relationships": [
+ 						{
+								"spdxElementId": "SPDXRef-foo",
+								"relationshipType": "DEPENDS_ON",
+								"relatedSpdxElement": "NOASSERTION"
+						}
+				]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
 	}
 
 	lessTopLevelCheckResult := func(check1, check2 *types.TopLevelCheckResult) bool {
@@ -1074,7 +1115,7 @@ func TestEOPkgResults(t *testing.T) {
 			}},
 		},
 		{
-			name: "Supplier is NOASSERTION passes check",
+			name: "Supplier is NOASSERTION fails check",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
@@ -1082,7 +1123,7 @@ func TestEOPkgResults(t *testing.T) {
 					"name": "Foo",
 					"SPDXID": "SPDXRef-foo",
 					"versionInfo": "v1",
-					"supplier": "Organization: foo",
+					"supplier": "NOASSERTION",
 					"externalRefs": [{
 						"referenceCategory": "PACKAGE-MANAGER", 
 						"referenceType": "purl",
@@ -1092,7 +1133,14 @@ func TestEOPkgResults(t *testing.T) {
 			}`,
 			expected: []*types.PkgResult{{
 				Package: &types.Package{Name: "Foo", SpdxID: "foo"},
-				Errors:  []*types.NonConformantField{},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "The supplier field is missing",
+					},
+					CheckName:      "Check that the package has a supplier",
+					ReportedBySpec: []string{"EO"},
+				}},
 			}},
 		},
 		{
