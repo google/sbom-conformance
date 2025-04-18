@@ -87,7 +87,7 @@ name: `EO`
 
 A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf. The checker in this library verifies the minimum required "Data Fields", but not the minimum required "Automation Support" or the minimum required "Practices and Processes".
 
-This checker does not consider `NOASSERTION` to be valid for the Version, Supplier, or Relationships checks.
+This checker considers `NOASSERTION` to be invalid for the Version, Supplier, and Relationships checks.
 
 #### Author
 
@@ -111,11 +111,17 @@ This refers to the "Component Name" data field in the NTIA specification. It is 
 
 #### Version
 
-This refers to the "Version of the Component" data field in the NTIA specification. It is a package-level check that passes if all of the following are true for the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field: it is present, not empty, and not `NOASSERTION`.
+This refers to the "Version of the Component" data field in the NTIA specification. It is a package-level check that passes if all of the following are true for the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field:
+- it is present
+- it is not empty
+- it is not `NOASSERTION`
 
 #### Supplier
 
-This refers to the "Supplier Name" data field in the NTIA specification. It is a package-level check that passes if all of the following are true for the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field: it is present, not empty, and not `NOASSERTION`.
+This refers to the "Supplier Name" data field in the NTIA specification. It is a package-level check that passes if all of the following are true for the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field:
+- it is present
+- it is not empty
+- it is not `NOASSERTION`
 
 #### External References
 
