@@ -87,6 +87,8 @@ name: `EO`
 
 A PDF of the specification can be found in https://www.ntia.doc.gov/files/ntia/publications/sbom_minimum_elements_report.pdf. The checker in this library verifies the minimum required "Data Fields", but not the minimum required "Automation Support" or the minimum required "Practices and Processes".
 
+This checker does not consider `NOASSERTION` to be valid for the Version, Supplier, or Relationships checks.
+
 #### Author
 
 This refers to the "Author of SBOM Data" data field in the NTIA specification. It is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) field contains at least one entry.
@@ -97,13 +99,11 @@ This refers to the "Timestamp" data field in the NTIA specification. It is a top
 
 #### Relationships
 
-This refers to the "Dependency Relationship" data field in the NTIA specification. It is a top-level check that passes if every package is a member of some [Relationship](https://spdx.github.io/spdx-spec/v2.3/relationships-between-SPDX-elements/). The check does not require a specific `relationshipType`. Finally, the check will fail if both sides of the relationship are the same.
+This refers to the "Dependency Relationship" data field in the NTIA specification. It is a top-level check that passes if, for every package, there exists a [relationship](https://spdx.github.io/spdx-spec/v2.3/relationships-between-SPDX-elements/) where the package is either `spdxElementId` or `relatedSpdxElement` and where the other side of the relationship is not `NOASSERTION` or the package itself.
 
-In the case that a package has no relationships, `NONE` can be used for `spdxElementId` or for `relatedSpdxElement`, and the check will pass for the package.
+Note that the `relationshipType` is not considered. In the case that a package has no relationships, `NONE` can be used for `spdxElementId` or for `relatedSpdxElement`, and the check will pass for the package.
 
 This is one interpretation of the NTIA specification. It differs from the SPDX intepretation ([defined here](https://spdx.github.io/spdx-spec/v2.3/how-to-use/#k2-satisfying-ntia-minimum-elements-for-an-sbom-using-spdx)), possibly because this library's intepretation does not factor in documents such as [Framing Software Component Transparency: Establishing a Common Software Bill of Material (SBOM)](https://www.ntia.gov/files/ntia/publications/framingsbom_20191112.pdf).
-
-TODO: the `NOASSERTION` behavior should be made consistent with the other checks.
 
 #### Name
 
@@ -111,13 +111,11 @@ This refers to the "Component Name" data field in the NTIA specification. It is 
 
 #### Version
 
-This refers to the "Version of the Component" data field in the NTIA specification. It is a package-level check that passes if the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field is present, non-empty, and not `NOASSERTION`.
-
-TODO: the `NOASSERTION` behavior should either be made configurable, or consistent with Supplier.
+This refers to the "Version of the Component" data field in the NTIA specification. It is a package-level check that passes if all of the following are true for the [Version](https://spdx.github.io/spdx-spec/v2.3/package-information/#73-package-version-field) field: it is present, not empty, and not `NOASSERTION`.
 
 #### Supplier
 
-This refers to the "Supplier Name" data field in the NTIA specification. It is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is present and non-empty.
+This refers to the "Supplier Name" data field in the NTIA specification. It is a package-level check that passes if all of the following are true for the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field: it is present, not empty, and not `NOASSERTION`.
 
 #### External References
 

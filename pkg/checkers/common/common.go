@@ -29,6 +29,8 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
+const NoAssertion = "NOASSERTION"
+
 func SBOMHasSPDXVersion(
 	doc *v23.Document,
 	spec string,
