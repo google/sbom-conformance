@@ -33,15 +33,40 @@ func checkPackagesHaveRelationships(
 		packagesInRelationships[string(pkg.PackageSPDXIdentifier)] = false
 	}
 	for _, relationship := range doc.Relationships {
+		if relationship == nil {
+			// untested; not clear how to cause this
+			continue
+		}
+
+		// If a package reference is NONE or is NOASSERTION, then ElementRefID will
+		// be empty and SpecialID will be NONE or NOASSERTION. We prefer to handle
+		// these possibilities as a single value.
+		refA := string(relationship.RefA.ElementRefID)
+		if specialID := relationship.RefA.SpecialID; specialID != "" {
+			refA = specialID
+		}
+		refB := string(relationship.RefB.ElementRefID)
+		if specialID := relationship.RefB.SpecialID; specialID != "" {
+			refB = specialID
+		}
+
+		// the relationship shouldn't count if both sides of the relationship are
+		// the same
+		if refA == refB {
+			continue
+		}
+
 		// DocumentRefID is empty if the reference is an element of the current SBOM.
 		// Only packages defined in the current SBOM are present in
 		// packagesInRelationships, so there's no need to check packagesInRelationships
 		// if DocumentRefID is not empty.
 		if relationship.RefA.DocumentRefID == "" {
-			packagesInRelationships[string(relationship.RefA.ElementRefID)] = true
+			// this might add NONE and NOASSERTION to the map, but it doesn't matter
+			packagesInRelationships[refA] = true
 		}
 		if relationship.RefB.DocumentRefID == "" {
-			packagesInRelationships[string(relationship.RefB.ElementRefID)] = true
+			// this might add NONE and NOASSERTION to the map, but it doesn't matter
+			packagesInRelationships[refB] = true
 		}
 	}
 	var packagesMissingRelationships int

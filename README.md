@@ -97,7 +97,7 @@ This refers to the "Timestamp" data field in the NTIA specification. It is a top
 
 #### Relationships
 
-This refers to the "Dependency Relationship" data field in the NTIA specification. It is a top-level check that passes if every package is a member of some [Relationship](https://spdx.github.io/spdx-spec/v2.3/relationships-between-SPDX-elements/). The check does not require a specific `relationshipType`.
+This refers to the "Dependency Relationship" data field in the NTIA specification. It is a top-level check that passes if every package is a member of some [Relationship](https://spdx.github.io/spdx-spec/v2.3/relationships-between-SPDX-elements/). The check does not require a specific `relationshipType`. Finally, the check will fail if both sides of the relationship are the same.
 
 In the case that a package has no relationships, `NONE` can be used for `spdxElementId` or for `relatedSpdxElement`, and the check will pass for the package.
 

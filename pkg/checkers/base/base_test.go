@@ -413,6 +413,28 @@ func TestParseFailure(t *testing.T) {
 				}]
 			}`,
 		},
+		{
+			name: "Empty package in relationship causes parse failure",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": [],
+					"created": ""
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						}
+				],
+				"relationships": [{
+					"spdxElementId": "",
+					"relationshipType": "DESCRIBES",
+					"relatedSpdxElement": "SPDXRef-foo"
+				}]
+			}`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -637,6 +659,88 @@ func TestEOTopLevelChecks(t *testing.T) {
 				{
 					Name:   "Check that each SBOM package has a relationship",
 					Passed: true,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Self relationships not allowed",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "some timestamp"
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						}
+				],
+				"relationships": [
+ 						{
+								"spdxElementId": "SPDXRef-foo",
+								"relationshipType": "DEPENDS_ON",
+								"relatedSpdxElement": "SPDXRef-foo"
+						}
+				]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: false,
+					Specs:  []string{"EO"},
+				},
+			},
+		},
+		{
+			name: "Self NONE relationship not allowed",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "some timestamp"
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						}
+				],
+				"relationships": [
+ 						{
+								"spdxElementId": "NONE",
+								"relationshipType": "DEPENDS_ON",
+								"relatedSpdxElement": "NONE"
+						}
+				]
+			}`,
+			expected: []*types.TopLevelCheckResult{
+				{
+					Name:   "Check that the SBOM has at least one creator",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that the SBOM has a timestamp",
+					Passed: true,
+					Specs:  []string{"EO"},
+				},
+				{
+					Name:   "Check that each SBOM package has a relationship",
+					Passed: false,
 					Specs:  []string{"EO"},
 				},
 			},
