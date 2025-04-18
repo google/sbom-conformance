@@ -1,17 +1,29 @@
 # sbom-conformance
 
-A tool to check the conformance of SBOMs to Google's internal spec, the NTIA Minimum Elements specification, and the SPDX requirements.
+A tool to check the conformance of SBOMs to specifications. A checker for the NTIA Minimum Elements Specification is provided with the library.
 
-> [!IMPORTANT]  
-> This library is being developed. It's not recommended to use it yet.
+> [!NOTE]  
+> This library also contains specification checkers for SPDX requirements and the Google Style Guide, but these are not ready for use.
 
 ## How to use
 
-sbom-conformance is a library. See below how to use it.
+sbom-conformance is a library and a CLI.
 
-### Create a `BaseChecker`
+### Interactive
 
-The `BaseChecker` does the analysis of SBOMs. To create one with the Google Internal specs, the EO specs and the SPDX specs, do the following:
+```
+git clone git@github.com:google/sbom-conformance.git
+
+cd sbom-conformance && go run main.go -specs eo -sbom testdata/sboms/simple.json
+```
+
+Run `go run main.go -h` to see the supported options.
+
+### Programmatic
+
+#### Initialization
+
+The `BaseChecker` does the analysis of SBOMs. The following code creates a base checker, runs it, and generates the results.
 
 ```go
 import (
@@ -22,56 +34,33 @@ checker := base.NewChecker(base.WithGoogleChecker(),
                            base.WithEOChecker(),
                            base.WithSPDXChecker())
 
+checker.RunChecks()
+
+results := checker.Results()
 
 ```
 
 You can choose any of the supported specs.
 
-### Run checks and view results
+#### Accessing the Results
 
-With a `BaseChecker`, we can now run all top-level checks and package-level checks:
-
-```go
-
-checker.RunChecks()
-
-```
-
-After that, you can get information about the SBOM and its conformance.
-
-#### Results
-
-##### Create the results
-
-```go
-results := checker.Results()
-```
-
-##### Text summary
-
-Get a text summary of the SBOM and the conformance checks.
+Text Summary:
 
 ```go
 results.TextSummary
 ```
 
-##### Structured summary
-
-Get a structured summary of the SBOM and the conformance checks.
+Structured summary of the SBOM and the conformance checks:
 
 ```go
 results.Summary
 ```
 
-##### Get top-level results
-
-Get the results of the top-level conformance checks.
+Results of the top-level conformance checks:
 
 ```go
 results.TopLevelChecks
 ```
-
-##### Get package results
 
 There are two ways to get the results of the package-level conformance checks.
 
@@ -87,14 +76,10 @@ Get the conformance checks directly, with statistics on the number of passed pac
 results.PackageLevelChecks
 ```
 
-## main.go
-
-sbom-conformance is currently mainly intended to be used as a library. We have a `main.go` that is in WIP. It may not support all features in sbom-conformance, but if you wish to use sbom-conformance as a standalone CLI tool, we accept pull requests for our `mail.go` file.
-
 ## Supported Specifications
 
 > [!IMPORTANT]  
-> This documentation is being developed and is not complete.
+> The only currently supported specification is the NTIA Minimum Elements.
 
 ### NTIA Minimum Elements
 
