@@ -39,6 +39,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Name: "Check that the SBOM has an SPDX version",
 			Impl: common.SBOMHasSPDXVersion,
 		},
+		// TODO: add a uniqueness check for SPDXID
 		{
 			Name: "Check that the SBOM has a data license",
 			Impl: common.SBOMHasDataLicense,
@@ -73,7 +74,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: common.MustHaveName,
 		},
 		{
-			Name: "Check that SBOM packages' ID is correctly formatted",
+			Name: "Check that SBOM packages' ID is present and conformant",
 			Impl: common.CheckSPDXID,
 		},
 		{

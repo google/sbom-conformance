@@ -137,6 +137,10 @@ The SPDX 2.3 specification (https://spdx.github.io/spdx-spec/v2.3/) requires tha
 
 This is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.
 
+#### SPDXID
+
+This is a package-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is present and conforms to `SPDXRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).

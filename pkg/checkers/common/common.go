@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
@@ -224,25 +225,10 @@ func missingSPDXIDPrefix(
 }
 
 func idstringIsConformant(idstring string) bool {
-	for _, char := range idstring {
-		if char == 45 {
-			continue
-		}
-		if char == 46 {
-			continue
-		}
-		if char > 65 && char < 91 {
-			continue
-		}
-		if char > 96 && char < 123 {
-			continue
-		}
-		if char > 46 && char < 58 {
-			continue
-		}
-		return false
+	charIsNotAllowed := func(c rune) bool {
+		return c != '.' && c != '-' && !unicode.IsLetter(c) && !unicode.IsDigit(c)
 	}
-	return true
+	return !strings.ContainsFunc(idstring, charIsNotAllowed)
 }
 
 func wrongSPDXID(

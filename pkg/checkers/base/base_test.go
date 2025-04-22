@@ -435,6 +435,23 @@ func TestParseFailure(t *testing.T) {
 				}]
 			}`,
 		},
+		{
+			name: "SPDXID without SPDXRef prefix fails to parse",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"creationInfo": {
+					"creators": [],
+					"created": ""
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "foo"
+						}
+				],
+			}`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1009,7 +1026,7 @@ func TestPackageLevelChecks(t *testing.T) {
 					Specs:             []string{"EO"},
 				},
 				{
-					Name:              "Check that SBOM packages' ID is correctly formatted",
+					Name:              "Check that SBOM packages' ID is present and conformant",
 					FailedPkgsPercent: 0,
 					Specs:             []string{"SPDX"},
 				},
@@ -1369,13 +1386,13 @@ func TestSPDXPkgResults(t *testing.T) {
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
 						"name": "foo",
-						"SPDXID": "SPDXRef-foo",
+						"SPDXID": "SPDXRef-abcXYZ123.-",
 						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
 			expected: []*types.PkgResult{{
-				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
 				Errors:  []*types.NonConformantField{},
 			}},
 		},
@@ -1422,6 +1439,130 @@ func TestSPDXPkgResults(t *testing.T) {
 						ErrorMsg:  "Has no PackageName field",
 					},
 					CheckName:      "Check that SBOM packages have a name",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package SPDXID check fails because it is missing",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageSPDXIdentifier field",
+					},
+					CheckName:      "Check that SBOM packages' ID is present and conformant",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package SPDXID check fails because the idstring is empty",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: ""},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageSPDXIdentifier field",
+					},
+					CheckName:      "Check that SBOM packages' ID is present and conformant",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		// The following three tests check common invalid characters for the SPDXID
+		// field.
+		{
+			name: "Package SPDXID check fails because it contains an underscore",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo_bar",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo_bar"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "formatError",
+						ErrorMsg: "SPDX Identifier is non-conformant. " +
+							"It should have letters, numbers, \".\" and/or \"-\"",
+					},
+					CheckName:      "Check that SBOM packages' ID is present and conformant",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package SPDXID check fails because it contains a dollar sign",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo$bar",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo$bar"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "formatError",
+						ErrorMsg: "SPDX Identifier is non-conformant. " +
+							"It should have letters, numbers, \".\" and/or \"-\"",
+					},
+					CheckName:      "Check that SBOM packages' ID is present and conformant",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package SPDXID check fails because it contains a comma",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo,bar",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo,bar"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "formatError",
+						ErrorMsg: "SPDX Identifier is non-conformant. " +
+							"It should have letters, numbers, \".\" and/or \"-\"",
+					},
+					CheckName:      "Check that SBOM packages' ID is present and conformant",
 					ReportedBySpec: []string{"SPDX"},
 				}},
 			}},
