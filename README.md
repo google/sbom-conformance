@@ -17,7 +17,7 @@ go install github.com/google/sbom-conformance@latest
 sbom-conformance -specs eo -sbom <path to sbom>
 ```
 
-Run `go run main.go -h` to see the supported options.
+Run `sbom-conformance -h` to see the supported options.
 
 ### Programmatic
 
