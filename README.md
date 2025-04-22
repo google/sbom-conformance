@@ -127,6 +127,16 @@ This refers to the "Supplier Name" data field in the NTIA specification. It is a
 
 This refers to the "Other Unique Identifiers" data field in the NTIA specification. It is a package-level check that passes if the [External References](https://spdx.github.io/spdx-spec/v2.3/package-information/#721-external-reference-field) field is present and non-empty.
 
+### SPDX 2.3
+
+name: `SPDX`
+
+The SPDX 2.3 specification (https://spdx.github.io/spdx-spec/v2.3/) requires that some fields are present and/or meet certain syntactic constraints.
+
+#### Name
+
+This is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).

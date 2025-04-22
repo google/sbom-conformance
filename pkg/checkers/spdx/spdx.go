@@ -60,6 +60,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: common.SBOMHasAtLeastOneCreator,
 		},
 		{
+			// TODO: this is wrong. There shouldn't be any google specific checks in this spec
 			Name: "Check that the SBOMs creator is formatted correctly",
 			Impl: common.SBOMHasCorrectCreationInfo,
 		},
