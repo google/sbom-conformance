@@ -1356,6 +1356,97 @@ func TestEOPkgResults(t *testing.T) {
 	}
 }
 
+func TestSPDXPkgResults(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []*types.PkgResult
+	}{
+		{
+			name: "All SPDX package level checks pass",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Errors:  []*types.NonConformantField{},
+			}},
+		},
+		{
+			name: "Package name check fails because it is missing",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"SPDXID": "SPDXRef-foo",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageName field",
+					},
+					CheckName:      "Check that SBOM packages have a name",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package name check fails because it is empty",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "",
+						"SPDXID": "SPDXRef-foo",
+						"filesAnalyzed": false,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageName field",
+					},
+					CheckName:      "Check that SBOM packages have a name",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(WithSPDXChecker())
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(tt.expected, checker.Results().PkgResults); diff != "" {
+				t.Errorf("Encountered checker.Results() diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 // e2e test for the EO checker.
 //
 //nolint:all
