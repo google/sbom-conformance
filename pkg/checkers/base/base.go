@@ -386,7 +386,7 @@ func (checker *BaseChecker) TextSummary() string {
 		slices.Sort(topLevelIssues)
 		sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialStringBuilder, "\t- ", "\n")
 		for _, topLevelIssue := range topLevelIssues {
-			sbWithDash.Writef(topLevelIssue)
+			sbWithDash.Writef("%s", topLevelIssue)
 		}
 	}
 
@@ -412,7 +412,7 @@ func (checker *BaseChecker) TextSummary() string {
 		slices.Sort(pkgLevelIssues)
 		sbWithDash := util.StringBuilderWithPrefixAndSuffix(&initialStringBuilder, "\t- ", "\n")
 		for _, pkgLevelIssue := range pkgLevelIssues {
-			sbWithDash.Writef(pkgLevelIssue)
+			sbWithDash.Writef("%s", pkgLevelIssue)
 		}
 	}
 	return initialStringBuilder.String()

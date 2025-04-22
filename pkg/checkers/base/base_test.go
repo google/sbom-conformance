@@ -25,8 +25,85 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/sbom-conformance/pkg/checkers/spdx"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
+	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
+
+// This tests a regression of https://github.com/google/sbom-conformance/pull/31/
+func TestTextSummaryDoesNotCrashWithPercentSignInPackageLevelCheckName(t *testing.T) {
+	alwaysFailCheck := func(pkg *v23.Package, spec string, checkName string) []*types.NonConformantField {
+		return []*types.NonConformantField{{
+			Error: &types.FieldError{
+				ErrorType: "some type",
+				ErrorMsg:  "--%v--",
+			},
+			CheckName:      "some name",
+			ReportedBySpec: []string{types.SPDX},
+		}}
+	}
+	// reuse the spdxChecker to avoid redefining all of the methods
+	spdxChecker := spdx.SPDXChecker{}
+	spdxChecker.PkgLevelChecks = append(spdxChecker.PkgLevelChecks, &types.PackageLevelCheck{
+		Name: "always fail",
+		Impl: alwaysFailCheck,
+	})
+	baseChecker := &BaseChecker{}
+	baseChecker.AddSpec(&spdxChecker)
+	sbom := `{
+		  "spdxVersion": "SPDX-2.3",
+		  "name": "SimpleSBOM",
+		  "packages": [{"name": "foo", "SPDXID": "SPDXRef-Bar"}]
+		  }
+		`
+	baseChecker, err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
+	if err != nil {
+		t.Fatalf("SetSBOM returned err: %v", err)
+	}
+
+	baseChecker.RunChecks()
+	unwanted := "%!v(MISSING)"
+	if summary := baseChecker.TextSummary(); strings.Contains(summary, unwanted) {
+		t.Errorf("%q was detected in the string summary: %s", unwanted, summary)
+	}
+}
+
+// This tests a regression of https://github.com/google/sbom-conformance/pull/31/
+func TestTextSummaryDoesNotCrashWithPercentSignInTopLevelCheckName(t *testing.T) {
+	alwaysFailCheck := func(doc *v23.Document, spec string) []*types.NonConformantField {
+		return []*types.NonConformantField{{
+			Error: &types.FieldError{
+				ErrorType: "some type",
+				ErrorMsg:  "--%v--",
+			},
+			CheckName:      "some name",
+			ReportedBySpec: []string{spec},
+		}}
+	}
+	// reuse the spdxChecker to avoid redefining all of the methods
+	spdxChecker := spdx.SPDXChecker{}
+	spdxChecker.TopLevelChecks = append(spdxChecker.TopLevelChecks, &types.TopLevelCheck{
+		Name: "always fail",
+		Impl: alwaysFailCheck,
+	})
+	baseChecker := &BaseChecker{}
+	baseChecker.AddSpec(&spdxChecker)
+	sbom := `{
+		  "spdxVersion": "SPDX-2.3",
+		  "name": "SimpleSBOM"
+		  }
+		`
+	baseChecker, err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
+	if err != nil {
+		t.Fatalf("SetSBOM returned err: %v", err)
+	}
+
+	baseChecker.RunChecks()
+	unwanted := "%!v(MISSING)"
+	if summary := baseChecker.TextSummary(); strings.Contains(summary, unwanted) {
+		t.Errorf("%q was detected in the string summary: %s", unwanted, summary)
+	}
+}
 
 func TestDeduplicatePackageResults(t *testing.T) {
 	t.Parallel()
