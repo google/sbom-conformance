@@ -78,6 +78,15 @@ func NewChecker(options ...func(*BaseChecker)) (*BaseChecker, error) {
 	return checker, nil
 }
 
+// Initializes the BaseChecker with the input SBOM. After this call, RunChecks()
+// can be called.
+//
+// Note that this method differs in behavior from SetSBOM(sbom io.Reader); it does
+// not return a copy of the receiver.
+func (checker *BaseChecker) SetSPDXDocument(sbom *v23.Document) {
+	checker.Document = sbom
+}
+
 // Returns a new BaseChecker with the old BaseCheckers specs
 // and the new SBOM. If the BaseChecker has already run a check
 // on an SBOM, invoking `SetSBOM` will not include those results.
