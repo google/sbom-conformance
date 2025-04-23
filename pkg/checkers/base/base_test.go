@@ -105,6 +105,29 @@ func TestTextSummaryDoesNotCrashWithPercentSignInTopLevelCheckName(t *testing.T)
 	}
 }
 
+// Most tests in this file use basechecker.SetSBOM(io.reader). This test exercises
+// the basechecker.SetSPDXDocument(v23.Document) initialization.
+func TestSetSpdxDocument(t *testing.T) {
+	baseChecker, err := NewChecker(WithEOChecker())
+	if err != nil {
+		t.Fatalf("NewChecker(WithEOChecker()) returned unexpected error: %v", err)
+	}
+	sbom := v23.Document{
+		SPDXVersion:  "SPDX-2.3",
+		DocumentName: "foo",
+		Packages:     []*v23.Package{{PackageSPDXIdentifier: "foo"}},
+	}
+	baseChecker.SetSPDXDocument(&sbom)
+	baseChecker.RunChecks()
+	// sanity check for success
+	if results := baseChecker.Results(); len(results.ErrsAndPacks) == 0 {
+		t.Errorf(
+			"len(baseChecker.Results().ErrsAndPacks) == 0, which indicates that no checks were run. The text summary is:\n%s",
+			results.TextSummary,
+		)
+	}
+}
+
 func TestDeduplicatePackageResults(t *testing.T) {
 	t.Parallel()
 	licenseName := "Other License"
