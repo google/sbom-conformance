@@ -202,7 +202,7 @@ func CheckSPDXID(
 		issue := missingSPDXIDPrefix(spec)
 		issue.CheckName = checkName
 		issues = append(issues, issue)
-	} else if !idstringIsConformant(idstring) {
+	} else if !IDStringIsConformant(idstring) {
 		issue := wrongSPDXID(spec)
 		issue.CheckName = checkName
 		issues = append(issues, issue)
@@ -224,7 +224,8 @@ func missingSPDXIDPrefix(
 	}
 }
 
-func idstringIsConformant(idstring string) bool {
+func IDStringIsConformant(idstring string) bool {
+	// This function is tested via TestSPDXTopLevelChecks and TestSPDXPkgResults.
 	charIsNotAllowed := func(c rune) bool {
 		return c != '.' && c != '-' && !unicode.IsLetter(c) && !unicode.IsDigit(c)
 	}

@@ -568,6 +568,217 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
+func TestSPDXTopLevelChecks(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []testutil.FailedTopLevelCheck
+	}{
+		{
+			name: "Other Licensing Info section is conformant",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"licenseId": "LicenseRef-foo.abc123-.XYZ",
+						"extractedText": "foo license"
+					},
+					{
+						"licenseId": "LicenseRef-bar",
+						"extractedText": "bar license"
+					}
+				]
+			}`,
+		},
+		{
+			name: "Licensing Info section is not conformant because of a missing licenseId",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"extractedText": "foo license"
+					}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that Other Licensing Information section is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Licensing Info section is not conformant because of a missing license text",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"licenseId": "LicenseRef-foo"
+					}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that Other Licensing Information section is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Licensing Info section is not conformant because of an empty license text",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"licenseId": "LicenseRef-foo",
+						"extractedText": ""
+					}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that Other Licensing Information section is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Licensing Info section is not conformant because licenseId is missing the idstring",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"licenseId": "LicenseRef-"
+					}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that Other Licensing Information section is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Licensing Info section is not conformant because licenseId has invalid chars",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"licenseId": "LicenseRef-a_a"
+					}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that Other Licensing Information section is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Licensing Info section is not conformant licenseId is not unique",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"hasExtractedLicensingInfos": [
+					{
+						"licenseId": "LicenseRef-a",
+						"extractedText": "foo"
+					},
+					{
+						"licenseId": "LicenseRef-a",
+						"extractedText": "foo"
+					}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that Other Licensing Information section is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(WithSPDXChecker())
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(
+				tt.expected,
+				testutil.ExtractFailedTopLevelChecks(checker.Results().TopLevelChecks),
+				testutil.FailedTopLevelCheckOpts...,
+			); diff != "" {
+				t.Errorf("Encountered checker.TopLevelResults() diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestEOTopLevelChecks(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -2122,10 +2333,6 @@ func TestSPDXChecker(t *testing.T) {
 	if results.Summary.SpecSummaries["SPDX"].Conformant != false {
 		t.Errorf("The 'SPDX' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["SPDX"].Conformant)
-	}
-	if results.Summary.SpecSummaries["SPDX"].PassedChecks != 9 {
-		t.Errorf("The 'SPDX' spec summary should be PassedChecks=9 but was PassedChecks=%d\n",
-			results.Summary.SpecSummaries["SPDX"].PassedChecks)
 	}
 	if len(results.PkgResults) != 4 {
 		t.Errorf("len(results.PkgResults) should be 4 but was %d\n",

@@ -15,6 +15,10 @@
 package spdx
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
@@ -48,6 +52,53 @@ func CheckFilesAnalyzed(
 			CheckName:      checkName,
 			ReportedBySpec: []string{spec},
 		})
+	}
+	return issues
+}
+
+func CheckOtherLicensingInformationSection(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if doc.OtherLicenses == nil {
+		return issues
+	}
+	licenseIds := map[string]any{}
+	// These licenses should only be present if they are not already on the SPDX
+	// license list, but this is not verified.
+	for _, licenseInfo := range doc.OtherLicenses {
+		// https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field
+		// is required
+		if licenseInfo.LicenseIdentifier == "" {
+			issues = append(issues, types.MandatoryPackageFieldError(types.LicenseIdentifier, spec))
+		}
+		after, found := strings.CutPrefix(licenseInfo.LicenseIdentifier, "LicenseRef-")
+		if !found || len(after) == 0 || !common.IDStringIsConformant(after) {
+			issues = append(
+				issues,
+				types.CreateWronglyFormattedFieldError(types.LicenseIdentifier, spec),
+			)
+		}
+
+		if _, found := licenseIds[after]; found {
+			issues = append(issues, &types.NonConformantField{
+				Error: &types.FieldError{
+					ErrorType: "uniqueIdViolation",
+					ErrorMsg: fmt.Sprintf(
+						"The License Identifier idstring %s is not unique",
+						after,
+					),
+				},
+			})
+		}
+		licenseIds[after] = struct{}{}
+
+		// https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#102-extracted-text-field
+		// is required
+		if licenseInfo.ExtractedText == "" {
+			issues = append(issues, types.MandatoryPackageFieldError(types.ExtractedText, spec))
+		}
 	}
 	return issues
 }
