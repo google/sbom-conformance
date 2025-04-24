@@ -25,7 +25,7 @@ func CheckDownloadLocation(
 	spec, checkName string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if !util.IsValidString(sbomPack.PackageDownloadLocation) {
+	if sbomPack.PackageDownloadLocation == "" {
 		issue := types.MandatoryPackageFieldError(
 			types.PackageDownloadLocation, spec,
 		)

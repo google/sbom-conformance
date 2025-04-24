@@ -82,7 +82,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: CheckVerificationCode,
 		},
 		{
-			Name: "Check that SBOM packages' download location is correctly formatted",
+			Name: "Check that SBOM packages have a download location",
 			Impl: CheckDownloadLocation,
 		},
 	}

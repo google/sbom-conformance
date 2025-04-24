@@ -1136,7 +1136,7 @@ func TestPackageLevelChecks(t *testing.T) {
 					Specs:             []string{"SPDX"},
 				},
 				{
-					Name:              "Check that SBOM packages' download location is correctly formatted",
+					Name:              "Check that SBOM packages have a download location",
 					FailedPkgsPercent: 0,
 					Specs:             []string{"SPDX"},
 				},
@@ -1667,6 +1667,86 @@ func TestSPDXPkgResults(t *testing.T) {
 				}},
 			}},
 		},
+		{
+			name: "Package download location check fails because it is missing",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"filesAnalyzed": false
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageDownloadLocation field",
+					},
+					CheckName:      "Check that SBOM packages have a download location",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package download location check fails because it is empty",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"filesAnalyzed": false,
+						"downloadLocation": ""
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageDownloadLocation field",
+					},
+					CheckName:      "Check that SBOM packages have a download location",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			// These are allowed by
+			// https://spdx.github.io/spdx-spec/v2.3/package-information/#77-package-download-location-field
+			name: "Package download location passes for NOASSERTION and NONE",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-foo",
+							"filesAnalyzed": false,
+							"downloadLocation": "NONE"
+						},
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"filesAnalyzed": false,
+							"downloadLocation": "NOASSERTION"
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "foo"},
+					Errors:  []*types.NonConformantField{},
+				},
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors:  []*types.NonConformantField{},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -2070,8 +2150,8 @@ func TestSPDXChecker(t *testing.T) {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
 			results.Summary.TotalSBOMPackages)
 	}
-	if results.Summary.FailedSBOMPackages != 3 {
-		t.Errorf("There should be 3 FailedSBOMPackages but the results only had %d\n",
+	if results.Summary.FailedSBOMPackages != 1 {
+		t.Errorf("There should be 1 FailedSBOMPackages but the results only had %d\n",
 			results.Summary.FailedSBOMPackages)
 	}
 	if len(results.Summary.SpecSummaries) != 1 {
@@ -2082,8 +2162,8 @@ func TestSPDXChecker(t *testing.T) {
 		t.Errorf("The 'SPDX' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["SPDX"].Conformant)
 	}
-	if results.Summary.SpecSummaries["SPDX"].PassedChecks != 8 {
-		t.Errorf("The 'SPDX' spec summary should be PassedChecks=8 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["SPDX"].PassedChecks != 9 {
+		t.Errorf("The 'SPDX' spec summary should be PassedChecks=9 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["SPDX"].PassedChecks)
 	}
 	if len(results.PkgResults) != 4 {
@@ -2108,9 +2188,9 @@ func TestSPDXChecker(t *testing.T) {
 	if results.PkgResults[1].Package.Name != "" {
 		t.Errorf("The first package should be named '' but was named '%s'", packageName)
 	}
-	if len(results.PkgResults[1].Errors) != 2 {
+	if len(results.PkgResults[1].Errors) != 1 {
 		t.Errorf(
-			"There should be two SBOM issues but there are %d\n",
+			"There should be one SBOM issues but there are %d\n",
 			len(results.PkgResults[1].Errors),
 		)
 	}
@@ -2123,19 +2203,7 @@ func TestSPDXChecker(t *testing.T) {
 			results.PkgResults[1].Errors[0].Error.ErrorMsg,
 		)
 	}
-	if results.PkgResults[1].Errors[1].Error.ErrorType != "missingField" {
-		t.Errorf("Should be missingField ErrorType")
-	}
-	if results.PkgResults[1].Errors[1].Error.ErrorMsg != "Has no PackageDownloadLocation field" {
-		t.Errorf(
-			"Should be 'Has no PackageDownloadLocation field' ErrorMsg but was %s\n",
-			results.PkgResults[1].Errors[1].Error.ErrorMsg,
-		)
-	}
 	if !slices.Equal(results.PkgResults[1].Errors[0].ReportedBySpec, []string{"SPDX"}) {
-		t.Errorf("The issue should be reported by SPDX")
-	}
-	if !slices.Equal(results.PkgResults[1].Errors[1].ReportedBySpec, []string{"SPDX"}) {
 		t.Errorf("The issue should be reported by SPDX")
 	}
 
@@ -2147,23 +2215,11 @@ func TestSPDXChecker(t *testing.T) {
 			packageName,
 		)
 	}
-	if len(results.PkgResults[2].Errors) != 1 {
+	if len(results.PkgResults[2].Errors) != 0 {
 		t.Errorf(
-			"There should be one SBOM issues but there are %d\n",
+			"There should be zero SBOM issues but there are %d\n",
 			len(results.PkgResults[2].Errors),
 		)
-	}
-	if results.PkgResults[2].Errors[0].Error.ErrorType != "missingField" {
-		t.Errorf("Should be missingField ErrorType")
-	}
-	if results.PkgResults[2].Errors[0].Error.ErrorMsg != "Has no PackageDownloadLocation field" {
-		t.Errorf(
-			"Should be 'Has no PackageDownloadLocation field' ErrorMsg but was %s\n",
-			results.PkgResults[2].Errors[0].Error.ErrorMsg,
-		)
-	}
-	if !slices.Equal(results.PkgResults[2].Errors[0].ReportedBySpec, []string{"SPDX"}) {
-		t.Errorf("The issue should be reported by SPDX")
 	}
 
 	// Fourth package findings
@@ -2174,22 +2230,10 @@ func TestSPDXChecker(t *testing.T) {
 			packageName,
 		)
 	}
-	if len(results.PkgResults[3].Errors) != 1 {
+	if len(results.PkgResults[3].Errors) != 0 {
 		t.Errorf(
-			"There should be one SBOM issues but there are %d\n",
+			"There should be zero SBOM issues but there are %d\n",
 			len(results.PkgResults[3].Errors),
 		)
-	}
-	if results.PkgResults[3].Errors[0].Error.ErrorType != "missingField" {
-		t.Errorf("Should be missingField ErrorType")
-	}
-	if results.PkgResults[3].Errors[0].Error.ErrorMsg != "Has no PackageDownloadLocation field" {
-		t.Errorf(
-			"Should be 'Has no PackageDownloadLocation field' ErrorMsg but was %s\n",
-			results.PkgResults[3].Errors[0].Error.ErrorMsg,
-		)
-	}
-	if !slices.Equal(results.PkgResults[3].Errors[0].ReportedBySpec, []string{"SPDX"}) {
-		t.Errorf("The issue should be reported by SPDX")
 	}
 }
