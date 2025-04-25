@@ -500,18 +500,14 @@ func TestParseFailure(t *testing.T) {
 		{
 			name: "Missing spdxVersion causes parse failure",
 			sbom: `{
+				"name": "SimpleSBOM"
+			}`,
+		},
+		{
+			name: "Empty spdxVersion causes parse failure",
+			sbom: `{
 				"name": "SimpleSBOM",
-				"packages": [{
-					"name": "Foo",
-					"SPDXID": "SPDXRef-foo",
-					"versionInfo": "v1",
-					"supplier": "not an organization",
-					"externalRefs": [{
-						"referenceCategory": "PACKAGE-MANAGER", 
-						"referenceType": "purl",
-						"referenceLocator": "pkg:foo"
-					}]
-				}]
+				"spdxVersion": ""
 			}`,
 		},
 		{
@@ -574,6 +570,66 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 		sbom     string
 		expected []testutil.FailedTopLevelCheck
 	}{
+		{
+			name: "SPDX version, name, and namespace checks pass",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+		},
+		{
+			name: "SPDX name and namespace checks fail because they are missing",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Document Name",
+					Specs: []string{"SPDX"},
+				},
+				{
+					Name:  "Check that the SBOM has a Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX name and namespace checks fail because they are empty",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"name": "",
+				"documentNamespace": "",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Document Name",
+					Specs: []string{"SPDX"},
+				},
+				{
+					Name:  "Check that the SBOM has a Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
 		{
 			name: "Other Licensing Info section is conformant",
 			sbom: `{
@@ -813,7 +869,10 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				testutil.ExtractFailedTopLevelChecks(checker.Results().TopLevelChecks),
 				testutil.FailedTopLevelCheckOpts...,
 			); diff != "" {
-				t.Errorf("Encountered checker.TopLevelResults() diff (-want +got):\n%s", diff)
+				t.Errorf(
+					"Encountered checker.TopLevelResults() diff (-want +got):\n%s",
+					diff,
+				)
 			}
 		})
 	}
