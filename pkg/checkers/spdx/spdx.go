@@ -41,7 +41,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 		},
 		// TODO: add a uniqueness check for SPDXID
 		{
-			Name: "Check that the SBOM has a data license",
+			Name: "Check that the data license is correct",
 			Impl: common.SBOMHasDataLicense,
 		},
 		{

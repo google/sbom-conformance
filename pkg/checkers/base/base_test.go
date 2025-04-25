@@ -755,6 +755,45 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "DataLicense is missing",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the data license is correct",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "DataLicense has wrong value",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "foo",
+				"name": "SimpleSBOM",
+				"documentNamespace": "namespace",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the data license is correct",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -2172,8 +2211,8 @@ func TestGoogleChecker(t *testing.T) {
 		t.Errorf("The 'Google' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["Google"].Conformant)
 	}
-	if results.Summary.SpecSummaries["Google"].PassedChecks != 7 {
-		t.Errorf("The 'Google' spec summary should be PassedChecks=7 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["Google"].PassedChecks != 6 {
+		t.Errorf("The 'Google' spec summary should be PassedChecks=6 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["Google"].PassedChecks)
 	}
 	if len(results.PkgResults) != 4 {
