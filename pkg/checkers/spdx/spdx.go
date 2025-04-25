@@ -65,6 +65,12 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Name: "Check that the SBOMs creator is formatted correctly",
 			Impl: common.SBOMHasCorrectCreationInfo,
 		},
+		{
+			// This check could be lowered to a per-license level, like packages,
+			// but it requires changes to the API and it's probably not a priority.
+			Name: "Check that Other Licensing Information section is conformant",
+			Impl: CheckOtherLicensingInformationSection,
+		},
 	}
 	spdxChecker.TopLevelChecks = topLevelChecks
 
