@@ -16,12 +16,31 @@ package spdx
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
+
+func CheckCreatorIsConformant(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if doc.CreationInfo == nil || len(doc.CreationInfo.Creators) == 0 {
+		issues = append(issues, types.CreateFieldError(types.Creator, spec))
+	} else {
+		for _, creator := range doc.CreationInfo.Creators {
+			if creator.Creator == "" ||
+				!slices.Contains([]string{"Tool", "Organization", "Person"}, creator.CreatorType) {
+				issues = append(issues, types.CreateFieldError(types.Creator, spec))
+			}
+		}
+	}
+	return issues
+}
 
 func CheckDownloadLocation(
 	sbomPack *v23.Package,

@@ -57,14 +57,14 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: common.SBOMHasValidDocumentNamespace,
 		},
 		{
-			Name: "Check that the SBOM has at least one creator",
-			Impl: common.SBOMHasAtLeastOneCreator,
+			Name: "Check that the SBOM has at least one creator and that they are formatted correctly",
+			Impl: CheckCreatorIsConformant,
 		},
-		{
-			// TODO: this is wrong. There shouldn't be any google specific checks in this spec
-			Name: "Check that the SBOMs creator is formatted correctly",
-			Impl: common.SBOMHasCorrectCreationInfo,
-		},
+		//		{
+		//			// TODO: this is wrong. There shouldn't be any google specific checks in this spec
+		//			Name: "Check that the SBOMs creator is formatted correctly",
+		//			Impl: common.SBOMHasCorrectCreationInfo,
+		//		},
 		{
 			// This check could be lowered to a per-license level, like packages,
 			// but it requires changes to the API and it's probably not a priority.

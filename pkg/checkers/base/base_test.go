@@ -578,7 +578,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 		expected []testutil.FailedTopLevelCheck
 	}{
 		{
-			name: "SPDX version, name, namespace, and SPDXID checks pass",
+			name: "SPDX version, name, namespace, SPDXID, and creator checks pass",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -586,18 +586,17 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
 		},
 		{
-			name: "SPDX name, namespace, and SPDXID checks fail because they are missing",
+			name: "SPDX name, namespace, SPDXID, and creator checks fail because they are missing",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -614,10 +613,14 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 					Name:  "Check that the SBOM has the correct SPDXIdentifier",
 					Specs: []string{"SPDX"},
 				},
+				{
+					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
+					Specs: []string{"SPDX"},
+				},
 			},
 		},
 		{
-			name: "SPDX name, namespace, and SPDXID checks fail because they are empty",
+			name: "SPDX name, namespace, SPDXID, and creator checks fail because they are empty",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -625,7 +628,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"SPDXID": "SPDXRef-",
 				"documentNamespace": "",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": [],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -640,6 +643,10 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				},
 				{
 					Name:  "Check that the SBOM has the correct SPDXIdentifier",
+					Specs: []string{"SPDX"},
+				},
+				{
+					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
 					Specs: []string{"SPDX"},
 				},
 			},
@@ -653,7 +660,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"name": "name",
 				"documentNamespace": "google.com",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -673,7 +680,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"name": "name",
       "documentNamespace": "https://google.com#subpath",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -694,7 +701,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"name": "name",
 				"documentNamespace": " https://google.com",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -714,13 +721,53 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"SPDXID": "SPDXRef-foo",
 				"documentNamespace": "https://foo.com",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
 			expected: []testutil.FailedTopLevelCheck{
 				{
 					Name:  "Check that the SBOM has the correct SPDXIdentifier",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Creator check fails because there is no creator component",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: "],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Creator check fails because the type is unrecognized",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Foo: Bar"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
 					Specs: []string{"SPDX"},
 				},
 			},
@@ -734,7 +781,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -758,7 +805,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -783,7 +830,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -808,7 +855,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -834,7 +881,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -860,7 +907,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -885,7 +932,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				},
 				"hasExtractedLicensingInfos": [
@@ -914,7 +961,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -934,7 +981,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"creators": ["Organization: Foo LLC"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,

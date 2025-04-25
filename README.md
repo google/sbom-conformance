@@ -149,6 +149,10 @@ This is a top-level check that passes if the [Document SPDX Identifier](https://
 
 This is a top-level check that passes if the [SPDX Version](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#61-spdx-version-field) is present and conforms to `SPDX-M.N`.
 
+#### Creator
+
+This is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) contains more than one entry, and if each entry is formatted correctly.
+
 #### Other License Information
 
 This is a top-level check that passes if, for each entry in the [Other Licensing Information ](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/) section, all of the following are true:
