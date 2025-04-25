@@ -67,9 +67,14 @@ func SBOMHasSPDXIdentifier(
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if doc.SPDXIdentifier == "" {
-		issue := types.CreateFieldError(types.SPDXID, spec)
-		issues = append(issues, issue)
+	if doc.SPDXIdentifier != "DOCUMENT" {
+		issues = append(issues, &types.NonConformantField{
+			Error: &types.FieldError{
+				ErrorType: "wrongValue",
+				ErrorMsg:  "SPDXID must be SPDXRef-Document",
+			},
+			ReportedBySpec: []string{spec},
+		})
 	}
 	return issues
 }
