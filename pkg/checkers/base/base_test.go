@@ -1025,7 +1025,7 @@ func TestPackageLevelChecks(t *testing.T) {
 					Specs:             []string{"SPDX"},
 				},
 				{
-					Name:              "Check that SBOM packages' verification code is correctly formatted",
+					Name:              "Check that SBOM packages' filesAnalyzed is true if packageVerificationCode is present",
 					FailedPkgsPercent: 0,
 					Specs:             []string{"SPDX"},
 				},
@@ -1381,7 +1381,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-abcXYZ123.-",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1397,7 +1396,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
 						"SPDXID": "SPDXRef-foo",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1421,7 +1419,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "",
 						"SPDXID": "SPDXRef-foo",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1444,7 +1441,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
 						"name": "foo",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1468,7 +1464,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1494,7 +1489,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo_bar",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1519,7 +1513,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo$bar",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1544,7 +1537,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo,bar",
-						"filesAnalyzed": false,
 						"downloadLocation": "foo.com"
 					}]
 				}`,
@@ -1568,8 +1560,7 @@ func TestSPDXPkgResults(t *testing.T) {
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
 						"name": "foo",
-						"SPDXID": "SPDXRef-foo",
-						"filesAnalyzed": false
+						"SPDXID": "SPDXRef-foo"
 					}]
 				}`,
 			expected: []*types.PkgResult{{
@@ -1592,7 +1583,6 @@ func TestSPDXPkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo",
-						"filesAnalyzed": false,
 						"downloadLocation": ""
 					}]
 				}`,
@@ -1619,13 +1609,11 @@ func TestSPDXPkgResults(t *testing.T) {
 						{
 							"name": "foo",
 							"SPDXID": "SPDXRef-foo",
-							"filesAnalyzed": false,
 							"downloadLocation": "NONE"
 						},
 						{
 							"name": "bar",
 							"SPDXID": "SPDXRef-bar",
-							"filesAnalyzed": false,
 							"downloadLocation": "NOASSERTION"
 						}
 					]
@@ -1640,6 +1628,85 @@ func TestSPDXPkgResults(t *testing.T) {
 					Errors:  []*types.NonConformantField{},
 				},
 			},
+		},
+		{
+			name: "Package filesAnalyzed check fails because it is false and verificationCode is present",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-abcXYZ123.-",
+						"filesAnalyzed": false,
+						"packageVerificationCode": {"packageVerificationCodeValue": "xyz"},
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "wrongValue",
+						ErrorMsg:  "filesAnalyzed must be true",
+					},
+					CheckName:      "Check that SBOM packages' filesAnalyzed is true if packageVerificationCode is present",
+					ReportedBySpec: []string{"SPDX"},
+				}},
+			}},
+		},
+		{
+			name: "Package filesAnalyzed check passes because it is true and verificationCode is present",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-abcXYZ123.-",
+						"filesAnalyzed": true,
+						"packageVerificationCode": {"packageVerificationCodeValue": "xyz"},
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+				Errors:  []*types.NonConformantField{},
+			}},
+		},
+		{
+			// the default value for filesAnalyzed is true
+			name: "Package filesAnalyzed check passes because it is missing and verificationCode is present",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-abcXYZ123.-",
+						"packageVerificationCode": {"packageVerificationCodeValue": "xyz"},
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+				Errors:  []*types.NonConformantField{},
+			}},
+		},
+		{
+			// this tests that verificationCode is not required.
+			name: "Package filesAnalyzed check passes because it is true and verificationCode is missing",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-abcXYZ123.-",
+						"filesAnalyzed": true,
+						"downloadLocation": "foo.com"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+				Errors:  []*types.NonConformantField{},
+			}},
 		},
 	}
 

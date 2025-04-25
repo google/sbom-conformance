@@ -16,7 +16,6 @@ package spdx
 
 import (
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
-	"github.com/google/sbom-conformance/pkg/util"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
@@ -35,20 +34,20 @@ func CheckDownloadLocation(
 	return issues
 }
 
-func CheckVerificationCode(
+func CheckFilesAnalyzed(
 	sbomPack *v23.Package,
 	spec, checkName string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if sbomPack.FilesAnalyzed {
-		if sbomPack.PackageVerificationCode == nil ||
-			!util.IsValidString(sbomPack.PackageVerificationCode.Value) {
-			issue := types.MandatoryPackageFieldError(
-				types.PackageVerificationCode, spec,
-			)
-			issue.CheckName = checkName
-			issues = append(issues, issue)
-		}
+	if sbomPack.PackageVerificationCode != nil && !sbomPack.FilesAnalyzed {
+		issues = append(issues, &types.NonConformantField{
+			Error: &types.FieldError{
+				ErrorType: "wrongValue",
+				ErrorMsg:  "filesAnalyzed must be true",
+			},
+			CheckName:      checkName,
+			ReportedBySpec: []string{spec},
+		})
 	}
 	return issues
 }

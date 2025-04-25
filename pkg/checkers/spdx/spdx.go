@@ -78,8 +78,8 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: common.CheckSPDXID,
 		},
 		{
-			Name: "Check that SBOM packages' verification code is correctly formatted",
-			Impl: CheckVerificationCode,
+			Name: "Check that SBOM packages' filesAnalyzed is true if packageVerificationCode is present",
+			Impl: CheckFilesAnalyzed,
 		},
 		{
 			Name: "Check that SBOM packages have a download location",
