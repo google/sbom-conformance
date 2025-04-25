@@ -86,7 +86,7 @@ func CheckOtherLicensingInformationSection(
 				Error: &types.FieldError{
 					ErrorType: "uniqueIdViolation",
 					ErrorMsg: fmt.Sprintf(
-						"The License Identifier idstring %s is not unique",
+						"The License Identifier LicenseRef-%s is not unique",
 						after,
 					),
 				},

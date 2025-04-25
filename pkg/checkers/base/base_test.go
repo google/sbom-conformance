@@ -688,7 +688,8 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				},
 				"hasExtractedLicensingInfos": [
 					{
-						"licenseId": "LicenseRef-"
+						"licenseId": "LicenseRef-",
+						"extractedText": "xyz"
 					}
 				]
 			}`,
