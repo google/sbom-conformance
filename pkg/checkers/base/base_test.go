@@ -27,6 +27,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/sbom-conformance/pkg/checkers/spdx"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
+	"github.com/google/sbom-conformance/pkg/testutil"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
@@ -568,39 +569,25 @@ func TestParseFailure(t *testing.T) {
 }
 
 func TestEOTopLevelChecks(t *testing.T) {
-	// there's a tradeoff between making these test cases more specific (and less
-	// verbose) and adding additional logic to the test case. As written, they
-	// avoid the logic and are less specific.
 	tests := []struct {
-		name     string
-		sbom     string
-		expected []*types.TopLevelCheckResult
+		name       string
+		sbom       string
+		wantFailed []testutil.FailedTopLevelCheck
 	}{
 		{
 			name: "Missing fields cause author and timestamp checks to fail",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
-				"name": "SimpleSBOM",
-				"packages": [{
-					"name": "Foo",
-					"SPDXID": "SPDXRef-foo"
-				}]
+				"name": "SimpleSBOM"
 			}`,
-			expected: []*types.TopLevelCheckResult{
+			wantFailed: []testutil.FailedTopLevelCheck{
 				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that the SBOM has at least one creator",
+					Specs: []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: false,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that the SBOM has a timestamp",
+					Specs: []string{"EO"},
 				},
 			},
 		},
@@ -612,28 +599,16 @@ func TestEOTopLevelChecks(t *testing.T) {
 				"creationInfo": {
 					"creators": [],
 					"created": ""
-				},
-				"packages": [{
-					"name": "Foo",
-					"SPDXID": "SPDXRef-foo"
-				}],
-				"relationships": []
+				}
 			}`,
-			expected: []*types.TopLevelCheckResult{
+			wantFailed: []testutil.FailedTopLevelCheck{
 				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that the SBOM has at least one creator",
+					Specs: []string{"EO"},
 				},
 				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: false,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that the SBOM has a timestamp",
+					Specs: []string{"EO"},
 				},
 			},
 		},
@@ -643,8 +618,8 @@ func TestEOTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
 				"creationInfo": {
-					"creators": [],
-					"created": ""
+					"creators": ["Organization: Foo"],
+					"created": "some timestamp"
 				},
 				"packages": [
  						{
@@ -662,21 +637,10 @@ func TestEOTopLevelChecks(t *testing.T) {
 					"relatedSpdxElement": "SPDXRef-foo"
 				}]
 			}`,
-			expected: []*types.TopLevelCheckResult{
+			wantFailed: []testutil.FailedTopLevelCheck{
 				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: false,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: false,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that each SBOM package has a relationship",
+					Specs: []string{"EO"},
 				},
 			},
 		},
@@ -712,23 +676,6 @@ func TestEOTopLevelChecks(t *testing.T) {
 						}
 				]
 			}`,
-			expected: []*types.TopLevelCheckResult{
-				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-			},
 		},
 		{
 			name: "Relationship check allows any relationship type and NONE components",
@@ -762,23 +709,6 @@ func TestEOTopLevelChecks(t *testing.T) {
 						}
 				]
 			}`,
-			expected: []*types.TopLevelCheckResult{
-				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-			},
 		},
 		{
 			name: "Self relationships not allowed",
@@ -803,21 +733,10 @@ func TestEOTopLevelChecks(t *testing.T) {
 						}
 				]
 			}`,
-			expected: []*types.TopLevelCheckResult{
+			wantFailed: []testutil.FailedTopLevelCheck{
 				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that each SBOM package has a relationship",
+					Specs: []string{"EO"},
 				},
 			},
 		},
@@ -844,21 +763,10 @@ func TestEOTopLevelChecks(t *testing.T) {
 						}
 				]
 			}`,
-			expected: []*types.TopLevelCheckResult{
+			wantFailed: []testutil.FailedTopLevelCheck{
 				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that each SBOM package has a relationship",
+					Specs: []string{"EO"},
 				},
 			},
 		},
@@ -885,28 +793,13 @@ func TestEOTopLevelChecks(t *testing.T) {
 						}
 				]
 			}`,
-			expected: []*types.TopLevelCheckResult{
+			wantFailed: []testutil.FailedTopLevelCheck{
 				{
-					Name:   "Check that the SBOM has at least one creator",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that the SBOM has a timestamp",
-					Passed: true,
-					Specs:  []string{"EO"},
-				},
-				{
-					Name:   "Check that each SBOM package has a relationship",
-					Passed: false,
-					Specs:  []string{"EO"},
+					Name:  "Check that each SBOM package has a relationship",
+					Specs: []string{"EO"},
 				},
 			},
 		},
-	}
-
-	lessTopLevelCheckResult := func(check1, check2 *types.TopLevelCheckResult) bool {
-		return check1.Name < check2.Name
 	}
 
 	for _, tt := range tests {
@@ -922,9 +815,10 @@ func TestEOTopLevelChecks(t *testing.T) {
 
 			checker.RunChecks()
 			if diff := cmp.Diff(
-				tt.expected,
-				checker.Results().TopLevelChecks,
-				cmpopts.SortSlices(lessTopLevelCheckResult)); diff != "" {
+				tt.wantFailed,
+				testutil.ExtractFailedTopLevelChecks(checker.Results().TopLevelChecks),
+				testutil.FailedTopLevelCheckOpts...,
+			); diff != "" {
 				t.Errorf("Encountered checker.TopLevelResults() diff (-want +got):\n%s", diff)
 			}
 		})
