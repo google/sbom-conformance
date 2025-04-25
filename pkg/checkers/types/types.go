@@ -44,6 +44,7 @@ var (
 	PackageDownloadLocation     = "PackageDownloadLocation"
 	PackageVerificationCode     = "PackageVerificationCode"
 	PackageLicenseConcluded     = "PackageLicenseConcluded"
+	PackageFilesAnalyzed        = "PackageFilesAnalyzed"
 	PackageLicenseInfoFromFiles = "PackageLicenseInfoFromFiles"
 	PackageExternalReferences   = "PackageExternalReferences"
 	PackageSupplier             = "PackageSupplier"

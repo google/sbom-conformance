@@ -145,6 +145,12 @@ This is a package-level check that passes if the [Package SPDX Identifier](https
 
 This is a package-level check that passes if the [Package Download Location](https://spdx.github.io/spdx-spec/v2.3/package-information/#77-package-download-location-field) field is present and not empty.
 
+#### Files Analyzed
+
+This is a package-level check that passes if either of the following are true:
+- the [Package Verification Code](https://spdx.github.io/spdx-spec/v2.3/package-information/#79-package-verification-code-field) field is missing
+- the [Package Verification Code](https://spdx.github.io/spdx-spec/v2.3/package-information/#79-package-verification-code-field) field is present and the [Files Analyzed](https://spdx.github.io/spdx-spec/v2.3/package-information/#78-files-analyzed-field) field is `true`
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
