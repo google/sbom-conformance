@@ -125,7 +125,7 @@ func SBOMHasAtLeastOneCreator(
 	return issues
 }
 
-func wrongDateFormat(
+func WrongDateFormat(
 	doc *v23.Document,
 	spec string,
 ) *types.NonConformantField {
@@ -185,7 +185,7 @@ func SBOMHasCorrectCreationInfo(
 		}
 		_, err := time.Parse(time.RFC3339, doc.CreationInfo.Created)
 		if err != nil {
-			issue := wrongDateFormat(doc, spec)
+			issue := WrongDateFormat(doc, spec)
 			issues = append(issues, issue)
 		}
 		for _, creator := range doc.CreationInfo.Creators {

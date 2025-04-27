@@ -153,6 +153,10 @@ This is a top-level check that passes if the [SPDX Version](https://spdx.github.
 
 This is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) contains one or more entries and each entry is formatted correctly. The last parenthesis group in the creator is interpreted as the email.
 
+#### Created
+
+This is a top-level check that passes if the [Created](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#69-created-field) field is present and conforms to `YYYY-MM-DDThh:mm:ssZ`.
+
 #### Other License Information
 
 This is a top-level check that passes if, for each entry in the [Other Licensing Information ](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/) section, all of the following are true:
