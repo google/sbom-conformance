@@ -187,6 +187,24 @@ This is a package-level check that passes if either of the following are true:
 - the [Package Verification Code](https://spdx.github.io/spdx-spec/v2.3/package-information/#79-package-verification-code-field) field is missing
 - the [Package Verification Code](https://spdx.github.io/spdx-spec/v2.3/package-information/#79-package-verification-code-field) field is present and the [Files Analyzed](https://spdx.github.io/spdx-spec/v2.3/package-information/#78-files-analyzed-field) field is `true`
 
+### Google Style Guide
+
+name: `google`
+
+The Google SBOM Style Guide is similar to the SPDX requirements with a few additional restriction.
+
+#### Document Name
+
+This is a top-level check that passes if the [Document Name](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#64-document-name-field) field is present and not empty.
+
+#### Data License
+
+This is a top-level check that passes if the [Data License](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#62-data-license-field) field is `CC0-1.0`.
+
+#### Document SPDXID
+
+This is a top-level check that passes if the [Document SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#63-spdx-identifier-field) field is `SPDXRef-DOCUMENT`.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).

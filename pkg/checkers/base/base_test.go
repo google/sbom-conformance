@@ -571,6 +571,119 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
+func TestGoogleTopLevelChecks(t *testing.T) {
+	tests := []struct {
+		name     string
+		sbom     string
+		expected []testutil.FailedTopLevelCheck
+	}{
+		{
+			name: "Google data license, SPDXID, and document name checks pass",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+		},
+		{
+			name: "Google data license, SPDXID, and document name checks fail because they are missing",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"documentNamespace": "https://foo.com",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the data license is correct",
+					Specs: []string{"Google"},
+				},
+				{
+					Name:  "Check that the SBOM has the correct SPDX Identifier",
+					Specs: []string{"Google"},
+				},
+				{
+					Name:  "Check that the SBOM has a Document Name",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google data license check fails because it is has the wrong value",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.1",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the data license is correct",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google SPDXID check fails because it is has the wrong value",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-foo",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has the correct SPDX Identifier",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checker, err := NewChecker(WithGoogleChecker())
+			if err != nil {
+				t.Fatalf("NewChecker failed with error: %v", err)
+			}
+			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+			if diff := cmp.Diff(
+				tt.expected,
+				testutil.ExtractFailedTopLevelChecks(checker.Results().TopLevelChecks),
+				testutil.FailedTopLevelCheckOpts...,
+			); diff != "" {
+				t.Errorf(
+					"Encountered checker.TopLevelResults() diff (-want +got):\n%s",
+					diff,
+				)
+			}
+		})
+	}
+}
+
 func TestSPDXTopLevelChecks(t *testing.T) {
 	tests := []struct {
 		name     string

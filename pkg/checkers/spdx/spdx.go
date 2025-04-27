@@ -41,11 +41,11 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 		},
 		{
 			Name: "Check that the data license is correct",
-			Impl: common.SBOMHasDataLicense,
+			Impl: common.SBOMHasCorrectDataLicense,
 		},
 		{
 			Name: "Check that the SBOM has the correct SPDXIdentifier",
-			Impl: common.SBOMHasSPDXIdentifier,
+			Impl: common.SBOMHasCorrectSPDXIdentifier,
 		},
 		{
 			Name: "Check that the SBOM has a Document Name",
