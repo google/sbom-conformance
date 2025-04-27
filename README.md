@@ -176,6 +176,10 @@ This is a package-level check that passes if the [Name](https://spdx.github.io/s
 
 This is a package-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is present and conforms to `SPDXRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`.
 
+#### Package SPDXID Uniqueness
+
+This is a top-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is unique among all packages.
+
 #### Download Location
 
 This is a package-level check that passes if the [Package Download Location](https://spdx.github.io/spdx-spec/v2.3/package-information/#77-package-download-location-field) field is present and not empty.

@@ -1221,6 +1221,64 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "SPDX Package SPDXID is not unique",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						},
+ 						{
+								"name": "Bar",
+								"SPDXID": "SPDXRef-bar"
+						},
+ 						{
+								"name": "Baz",
+								"SPDXID": "SPDXRef-foo"
+						}
+				]
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the package SPDX identifiers are unique",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX Package SPDXID is unique",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"dataLicense": "CC0-1.0",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Foo"],
+					"created": "2025-04-08T01:25:25Z"
+				},
+				"packages": [
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-foo"
+						},
+ 						{
+								"name": "Foo",
+								"SPDXID": "SPDXRef-bar"
+						}
+				]
+			}`,
+		},
 	}
 
 	for _, tt := range tests {
