@@ -140,6 +140,10 @@ This is a top-level check that passes if, for each entry in the [Other Licensing
 - the [License Identifier](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field) field is unique among all entries
 - the [Extracted Text Field](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#102-extracted-text-field) is present and not empty
 
+#### Data License
+
+This is a top-level check that passes if the [Data License](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#62-data-license-field) field is `CC0-1.0`.
+
 #### Name
 
 This is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.

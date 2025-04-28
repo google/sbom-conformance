@@ -49,9 +49,14 @@ func SBOMHasDataLicense(
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if !util.IsValidString(doc.DataLicense) {
-		issue := types.CreateFieldError(types.DataLicense, spec)
-		issues = append(issues, issue)
+	if doc.DataLicense != "CC0-1.0" {
+		issues = append(issues, &types.NonConformantField{
+			Error: &types.FieldError{
+				ErrorType: "wrongValue",
+				ErrorMsg:  "DataLicense must be CC0-1.0",
+			},
+			ReportedBySpec: []string{spec},
+		})
 	}
 	return issues
 }
