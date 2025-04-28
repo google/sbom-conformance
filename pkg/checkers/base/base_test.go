@@ -511,6 +511,13 @@ func TestParseFailure(t *testing.T) {
 			}`,
 		},
 		{
+			name: "Invalid spdxVersion causes parse failure",
+			sbom: `{
+				"name": "SimpleSBOM",
+				"spdxVersion": "SPDX-2.3.1"
+			}`,
+		},
+		{
 			name: "Empty package in relationship causes parse failure",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
@@ -576,7 +583,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -601,7 +608,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 					Specs: []string{"SPDX"},
 				},
 				{
-					Name:  "Check that the SBOM has a Document Namespace",
+					Name:  "Check that the SBOM has a valid Document Namespace",
 					Specs: []string{"SPDX"},
 				},
 			},
@@ -625,7 +632,68 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 					Specs: []string{"SPDX"},
 				},
 				{
-					Name:  "Check that the SBOM has a Document Namespace",
+					Name:  "Check that the SBOM has a valid Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX namespace check fails because it does not have a scheme",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"name": "name",
+				"documentNamespace": "google.com",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a valid Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX namespace check fails because it has a '#'",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"name": "name",
+      "documentNamespace": "https://google.com#subpath",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a valid Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX namespace check fails because it is not an RFC 3986 url",
+			// invalid character in DocumentNamespace scheme
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"name": "name",
+				"documentNamespace": " https://google.com",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a valid Document Namespace",
 					Specs: []string{"SPDX"},
 				},
 			},
@@ -636,7 +704,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -660,7 +728,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -685,7 +753,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -710,7 +778,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -736,7 +804,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -762,7 +830,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -787,7 +855,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -816,7 +884,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -836,7 +904,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "foo",
 				"name": "SimpleSBOM",
-				"documentNamespace": "namespace",
+				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
