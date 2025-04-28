@@ -151,7 +151,7 @@ This is a top-level check that passes if the [SPDX Version](https://spdx.github.
 
 #### Creator
 
-This is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) contains more than one entry, and if each entry is formatted correctly.
+This is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) contains one or more entries and each entry is formatted correctly. The last parenthesis group in the creator is interpreted as the email.
 
 #### Other License Information
 
