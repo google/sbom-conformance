@@ -20,6 +20,7 @@ Contains checks that multiple specs use
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 	"unicode"
@@ -37,7 +38,7 @@ func SBOMHasSPDXVersion(
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if !util.IsValidString(doc.SPDXVersion) {
+	if doc.SPDXVersion == "" {
 		issue := types.CreateFieldError(types.SPDXVersion, spec)
 		issues = append(issues, issue)
 	}
@@ -78,20 +79,31 @@ func SBOMHasDocumentName(
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if !util.IsValidString(doc.DocumentName) {
-		issue := types.CreateFieldError(types.DocumentNamespace, spec)
+	if doc.DocumentName == "" {
+		issue := types.CreateFieldError(types.DocumentName, spec)
 		issues = append(issues, issue)
 	}
 	return issues
 }
 
-func SBOMHasDocumentNamespace(
+func SBOMHasValidDocumentNamespace(
 	doc *v23.Document,
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if !util.IsValidString(doc.DocumentNamespace) {
+	if doc.DocumentNamespace == "" {
 		issue := types.CreateFieldError(types.DocumentNamespace, spec)
+		issues = append(issues, issue)
+		return issues
+	}
+	url, err := url.Parse(doc.DocumentNamespace)
+	if err != nil {
+		issue := types.CreateWronglyFormattedFieldError(types.DocumentNamespace, spec)
+		issues = append(issues, issue)
+		return issues
+	}
+	if !url.IsAbs() || strings.Contains(doc.DocumentNamespace, "#") {
+		issue := types.CreateWronglyFormattedFieldError(types.DocumentNamespace, spec)
 		issues = append(issues, issue)
 	}
 	return issues

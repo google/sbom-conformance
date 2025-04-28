@@ -133,6 +133,18 @@ name: `SPDX`
 
 The SPDX 2.3 specification (https://spdx.github.io/spdx-spec/v2.3/) requires that some fields are present and/or meet certain syntactic constraints.
 
+#### Document Name
+
+This is a top-level check that passes if the [Document Name](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#64-document-name-field) field is present and not empty.
+
+#### Document Namespace
+
+This is a top-level check that passes if the [Document Namespace](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#65-spdx-document-namespace-field) field is present and is a RFC 3986 URL with a scheme and without `#` characters.
+
+#### SPDX Version
+
+This is a top-level check that passes if the [SPDX Version](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#61-spdx-version-field) is present and conforms to `SPDX-M.N`.
+
 #### Other License Information
 
 This is a top-level check that passes if, for each entry in the [Other Licensing Information ](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/) section, all of the following are true:
@@ -144,11 +156,11 @@ This is a top-level check that passes if, for each entry in the [Other Licensing
 
 This is a top-level check that passes if the [Data License](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#62-data-license-field) field is `CC0-1.0`.
 
-#### Name
+#### Package Name
 
 This is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.
 
-#### SPDXID
+#### Package SPDXID
 
 This is a package-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is present and conforms to `SPDXRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`.
 

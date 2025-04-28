@@ -51,7 +51,7 @@ func (googleChecker *GoogleChecker) InitChecks() {
 		},
 		{
 			Name: "Check that the SBOM has a Document Namespace",
-			Impl: common.SBOMHasDocumentNamespace,
+			Impl: common.SBOMHasValidDocumentNamespace,
 		},
 		{
 			Name: "Check that the SBOM has at least one creator",

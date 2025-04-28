@@ -36,7 +36,7 @@ type SPDXChecker struct {
 func (spdxChecker *SPDXChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			Name: "Check that the SBOM has an SPDX version",
+			Name: "Check that the SBOM has a valid SPDX version",
 			Impl: common.SBOMHasSPDXVersion,
 		},
 		// TODO: add a uniqueness check for SPDXID
@@ -53,8 +53,8 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: common.SBOMHasDocumentName,
 		},
 		{
-			Name: "Check that the SBOM has a Document Namespace",
-			Impl: common.SBOMHasDocumentNamespace,
+			Name: "Check that the SBOM has a valid Document Namespace",
+			Impl: common.SBOMHasValidDocumentNamespace,
 		},
 		{
 			Name: "Check that the SBOM has at least one creator",
