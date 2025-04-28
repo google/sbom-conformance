@@ -141,6 +141,10 @@ This is a top-level check that passes if the [Document Name](https://spdx.github
 
 This is a top-level check that passes if the [Document Namespace](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#65-spdx-document-namespace-field) field is present and is a RFC 3986 URL with a scheme and without `#` characters.
 
+#### Document SPDXID
+
+This is a top-level check that passes if the [Document SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#63-spdx-identifier-field) field is `SPDXRef-DOCUMENT`.
+
 #### SPDX Version
 
 This is a top-level check that passes if the [SPDX Version](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#61-spdx-version-field) is present and conforms to `SPDX-M.N`.

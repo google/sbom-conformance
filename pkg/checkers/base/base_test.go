@@ -578,7 +578,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 		expected []testutil.FailedTopLevelCheck
 	}{
 		{
-			name: "SPDX version, name, and namespace checks pass",
+			name: "SPDX version, name, namespace, and SPDXID checks pass",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -592,11 +592,10 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 			}`,
 		},
 		{
-			name: "SPDX name and namespace checks fail because they are missing",
+			name: "SPDX name, namespace, and SPDXID checks fail because they are missing",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
-				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
 					"created": "2025-04-08T01:25:25Z"
@@ -611,15 +610,19 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 					Name:  "Check that the SBOM has a valid Document Namespace",
 					Specs: []string{"SPDX"},
 				},
+				{
+					Name:  "Check that the SBOM has the correct SPDXIdentifier",
+					Specs: []string{"SPDX"},
+				},
 			},
 		},
 		{
-			name: "SPDX name and namespace checks fail because they are empty",
+			name: "SPDX name, namespace, and SPDXID checks fail because they are empty",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
-				"SPDXID": "SPDXRef-DOCUMENT",
 				"name": "",
+				"SPDXID": "SPDXRef-",
 				"documentNamespace": "",
 				"creationInfo": {
 					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
@@ -633,6 +636,10 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				},
 				{
 					Name:  "Check that the SBOM has a valid Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+				{
+					Name:  "Check that the SBOM has the correct SPDXIdentifier",
 					Specs: []string{"SPDX"},
 				},
 			},
@@ -694,6 +701,26 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 			expected: []testutil.FailedTopLevelCheck{
 				{
 					Name:  "Check that the SBOM has a valid Document Namespace",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX SPDXID check fails because it is not SPDXRef-DOCUMENT",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "foo",
+				"SPDXID": "SPDXRef-foo",
+				"documentNamespace": "https://foo.com",
+				"creationInfo": {
+					"creators": [{"Creator": "Google LLC", "CreatorType": "Organization"}],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has the correct SPDXIdentifier",
 					Specs: []string{"SPDX"},
 				},
 			},

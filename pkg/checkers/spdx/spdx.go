@@ -45,7 +45,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Impl: common.SBOMHasDataLicense,
 		},
 		{
-			Name: "Check that the SBOM has an SPDXIdentifier",
+			Name: "Check that the SBOM has the correct SPDXIdentifier",
 			Impl: common.SBOMHasSPDXIdentifier,
 		},
 		{
