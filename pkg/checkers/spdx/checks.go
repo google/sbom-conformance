@@ -31,11 +31,17 @@ func CheckCreatorIsConformant(
 	issues := make([]*types.NonConformantField, 0)
 	if doc.CreationInfo == nil || len(doc.CreationInfo.Creators) == 0 {
 		issues = append(issues, types.CreateFieldError(types.Creator, spec))
-	} else {
-		for _, creator := range doc.CreationInfo.Creators {
-			if creator.Creator == "" ||
-				!slices.Contains([]string{"Tool", "Organization", "Person"}, creator.CreatorType) {
-				issues = append(issues, types.CreateFieldError(types.Creator, spec))
+		return issues
+	}
+	for _, creator := range doc.CreationInfo.Creators {
+		if creator.Creator == "" ||
+			!slices.Contains([]string{"Tool", "Organization", "Person"}, creator.CreatorType) {
+			issues = append(issues, types.CreateFieldError(types.Creator, spec))
+		}
+		if creator.CreatorType == "Tool" {
+			tool, version, found := strings.Cut(creator.Creator, "-")
+			if !found || version == "" || tool == "" {
+				issues = append(issues, types.CreateWronglyFormattedFieldError(types.Creator, spec))
 			}
 		}
 	}

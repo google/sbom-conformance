@@ -586,7 +586,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": ["Organization: Foo LLC"],
+					"creators": ["Organization: Foo LLC", "Tool: tool-v5"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -762,6 +762,46 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": ["Foo: Bar"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Creator check fails because the Tool does not contain a version",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Tool: Bar"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "Creator check fails because the Tool contains an empty version",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Tool: Bar-"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
