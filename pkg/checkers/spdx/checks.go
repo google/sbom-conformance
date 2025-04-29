@@ -19,6 +19,7 @@ import (
 	"net/mail"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
@@ -30,6 +31,25 @@ import (
 // "Organization: foo (inc) (email@domain.com)". In other words, the email is the
 // last parenthesis group.
 var creatorEmail *regexp.Regexp = regexp.MustCompile(`.+?\ \(([^\(\)]*?)\)$`)
+
+func CheckCreatedIsConformant(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if doc.CreationInfo == nil {
+		issues = append(issues, types.CreateFieldError(types.Created, spec))
+		return issues
+	}
+	// Check that the string is a valid RFC3339 time. However, the RFC allows for
+	// a timezone offset other than UTC, which is not allowed by SPDX. This is
+	// verified by checking that the last character is 'Z'.
+	_, err := time.Parse(time.RFC3339, doc.CreationInfo.Created)
+	if err != nil || !strings.HasSuffix(doc.CreationInfo.Created, "Z") {
+		issues = append(issues, common.WrongDateFormat(doc, spec))
+	}
+	return issues
+}
 
 func CheckCreatorIsConformant(
 	doc *v23.Document,

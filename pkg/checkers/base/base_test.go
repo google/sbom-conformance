@@ -578,7 +578,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 		expected []testutil.FailedTopLevelCheck
 	}{
 		{
-			name: "SPDX version, name, namespace, SPDXID, and creator checks pass",
+			name: "SPDX version, name, namespace, SPDXID, creator, and timestamp checks pass",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -592,13 +592,11 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 			}`,
 		},
 		{
-			name: "SPDX name, namespace, SPDXID, and creator checks fail because they are missing",
+			name: "SPDX name, namespace, SPDXID, creator, and timestamp checks fail because they are missing",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
-				"creationInfo": {
-					"created": "2025-04-08T01:25:25Z"
-				}
+				"creationInfo": {}
 			}`,
 			expected: []testutil.FailedTopLevelCheck{
 				{
@@ -617,10 +615,14 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
 					Specs: []string{"SPDX"},
 				},
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
+					Specs: []string{"SPDX"},
+				},
 			},
 		},
 		{
-			name: "SPDX name, namespace, SPDXID, and creator checks fail because they are empty",
+			name: "SPDX name, namespace, SPDXID, creator, and timestamp checks fail because they are empty",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -629,7 +631,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"documentNamespace": "",
 				"creationInfo": {
 					"creators": [],
-					"created": "2025-04-08T01:25:25Z"
+					"created": ""
 				}
 			}`,
 			expected: []testutil.FailedTopLevelCheck{
@@ -647,6 +649,10 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				},
 				{
 					Name:  "Check that the SBOM has at least one creator and that they are formatted correctly",
+					Specs: []string{"SPDX"},
+				},
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
 					Specs: []string{"SPDX"},
 				},
 			},
@@ -1170,6 +1176,47 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 			expected: []testutil.FailedTopLevelCheck{
 				{
 					Name:  "Check that the data license is correct",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX timestamp check fails because it is not UTC",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Foo LLC"],
+					"created": "1994-11-05T08:15:30-05:00"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
+					Specs: []string{"SPDX"},
+				},
+			},
+		},
+		{
+			name: "SPDX timestamp check fails because UTC is not explicit",
+			// timestamp is missing 'Z' suffix
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Foo LLC"],
+					"created": "2025-04-08T01:25:25"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
 					Specs: []string{"SPDX"},
 				},
 			},

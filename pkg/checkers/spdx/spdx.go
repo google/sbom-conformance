@@ -60,11 +60,10 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			Name: "Check that the SBOM has at least one creator and that they are formatted correctly",
 			Impl: CheckCreatorIsConformant,
 		},
-		//		{
-		//			// TODO: this is wrong. There shouldn't be any google specific checks in this spec
-		//			Name: "Check that the SBOMs creator is formatted correctly",
-		//			Impl: common.SBOMHasCorrectCreationInfo,
-		//		},
+		{
+			Name: "Check that the SBOM's timestamp is conformant",
+			Impl: CheckCreatedIsConformant,
+		},
 		{
 			// This check could be lowered to a per-license level, like packages,
 			// but it requires changes to the API and it's probably not a priority.
