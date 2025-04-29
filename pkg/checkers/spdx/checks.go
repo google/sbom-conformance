@@ -16,12 +16,56 @@ package spdx
 
 import (
 	"fmt"
+	"net/mail"
+	"regexp"
 	"strings"
 
 	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
+
+// Matches strings like "Organization: foo (foo@bar.com)". The email is captured.
+// The spec isn't very clear, but we interpret it to allow
+// "Organization: foo (inc) (email@domain.com)". In other words, the email is the
+// last parenthesis group.
+var creatorEmail *regexp.Regexp = regexp.MustCompile(`.+?\ \(([^\(\)]*?)\)$`)
+
+func CheckCreatorIsConformant(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if doc.CreationInfo == nil || len(doc.CreationInfo.Creators) == 0 {
+		issues = append(issues, types.CreateFieldError(types.Creator, spec))
+		return issues
+	}
+	for _, creator := range doc.CreationInfo.Creators {
+		if creator.Creator == "" {
+			issues = append(issues, types.CreateFieldError(types.Creator, spec))
+			continue
+		}
+		switch creator.CreatorType {
+		case "Tool":
+			tool, version, found := strings.Cut(creator.Creator, "-")
+			if !found || version == "" || tool == "" {
+				issues = append(issues, types.CreateWronglyFormattedFieldError(types.Creator, spec))
+			}
+		case "Person", "Organization":
+			matches := creatorEmail.FindStringSubmatch(creator.Creator)
+			// an email is not required, and we allow '()'
+			if len(matches) <= 1 || matches[1] == "" {
+				continue
+			}
+			if _, err := mail.ParseAddress(matches[1]); err != nil {
+				issues = append(issues, types.CreateWronglyFormattedFieldError(types.Creator, spec))
+			}
+		default:
+			issues = append(issues, types.CreateFieldError(types.Creator, spec))
+		}
+	}
+	return issues
+}
 
 func CheckDownloadLocation(
 	sbomPack *v23.Package,
