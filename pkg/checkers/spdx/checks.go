@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
+	spdxCommon "github.com/spdx/tools-golang/spdx/v2/common"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
@@ -31,6 +32,27 @@ import (
 // "Organization: foo (inc) (email@domain.com)". In other words, the email is the
 // last parenthesis group.
 var creatorEmail *regexp.Regexp = regexp.MustCompile(`.+?\ \(([^\(\)]*?)\)$`)
+
+func CheckUniqueSPDXIdentifier(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	spdxIDs := map[string]any{}
+	for _, pkg := range doc.Packages {
+		spdxID := spdxCommon.RenderElementID(pkg.PackageSPDXIdentifier)
+		if _, found := spdxIDs[spdxID]; found {
+			issues = append(issues, &types.NonConformantField{
+				Error: &types.FieldError{
+					ErrorType: "uniqueIdViolation",
+					ErrorMsg:  fmt.Sprintf("The Package SPDX Identifier %s is not unique", spdxID),
+				},
+			})
+		}
+		spdxIDs[spdxID] = struct{}{}
+	}
+	return issues
+}
 
 func CheckCreatedIsConformant(
 	doc *v23.Document,

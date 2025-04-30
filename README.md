@@ -1,9 +1,9 @@
 # sbom-conformance
 
-A tool to check the conformance of SBOMs to specifications. A checker for the NTIA Minimum Elements Specification is provided with the library.
+A tool to check the conformance of SBOMs to specifications. A checker for the NTIA Minimum Elements Specification and SPDX v2.3 requirements is provided with the library.
 
 > [!NOTE]  
-> This library also contains specification checkers for SPDX requirements and the Google Style Guide, but these are not ready for use.
+> This library also contains a checker for the Google Style Guide, but it is not yet ready for use.
 
 ## How to use
 
@@ -77,9 +77,6 @@ results.PackageLevelChecks
 ```
 
 ## Supported Specifications
-
-> [!IMPORTANT]  
-> The only currently supported specification is the NTIA Minimum Elements.
 
 ### NTIA Minimum Elements
 
@@ -175,6 +172,10 @@ This is a package-level check that passes if the [Name](https://spdx.github.io/s
 #### Package SPDXID
 
 This is a package-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is present and conforms to `SPDXRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`.
+
+#### Package SPDXID Uniqueness
+
+This is a top-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is unique among all packages.
 
 #### Download Location
 
