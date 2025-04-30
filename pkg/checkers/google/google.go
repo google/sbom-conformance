@@ -34,54 +34,64 @@ type GoogleChecker struct {
 func (googleChecker *GoogleChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
+			// needs to be updated to check for spdx 2.3
 			Name: "Check that the SBOM has an SPDX version",
 			Impl: common.SBOMHasSPDXVersion,
 		},
 		{
-			Name: "Check that the SBOM has a data license",
-			Impl: common.SBOMHasDataLicense,
+			Name: "Check that the data license is correct",
+			Impl: common.SBOMHasCorrectDataLicense,
 		},
 		{
-			Name: "Check that the SBOM has an SPDXIdentifier",
-			Impl: common.SBOMHasSPDXIdentifier,
+			Name: "Check that the SBOM has the correct SPDX Identifier",
+			Impl: common.SBOMHasCorrectSPDXIdentifier,
 		},
 		{
 			Name: "Check that the SBOM has a Document Name",
 			Impl: common.SBOMHasDocumentName,
 		},
 		{
+			// this needs to be updated to check for google specific url
 			Name: "Check that the SBOM has a Document Namespace",
 			Impl: common.SBOMHasValidDocumentNamespace,
 		},
 		{
+			// this is redundant given the following check
 			Name: "Check that the SBOM has at least one creator",
 			Impl: common.SBOMHasAtLeastOneCreator,
 		},
 		{
+			// this should be split into separate timestamp and creator checks
 			Name: "Check that the SBOMs creator is formatted correctly",
 			Impl: common.SBOMHasCorrectCreationInfo,
 		},
-		{
-			Name: "Check the SBOMs other licensing fields",
-			Impl: OtherLicensingInformationFields,
-		},
+		// This check needs to be updated. The OtherLicensingInformation section is
+		// not strictly required.
+		//		{
+		//			Name: "Check the SBOMs other licensing fields",
+		//			Impl: OtherLicensingInformationFields,
+		//		},
 	}
 	googleChecker.TopLevelChecks = topLevelChecks
 
 	packageLevelChecks := []*types.PackageLevelCheck{
 		{
+			// this needs to be tested
 			Name: "Check that SBOM packages have a name",
 			Impl: common.MustHaveName,
 		},
 		{
+			// this needs to be tested
 			Name: "Check that SBOM packages' ID is correctly formatted",
 			Impl: common.CheckSPDXID,
 		},
 		{
+			// this needs to be renamed to CheckPackageSupplier and the implementation simplified.
 			Name: "Check that SBOM packages have specified the supplier as Google",
 			Impl: CheckPackageOriginator,
 		},
 		{
+			// this needs to be updated to check that a custom license text is used
 			Name: "Check that SBOM packages have not left both PackageLicenseConcluded and PackageLicenseInfoFromFiles empty",
 			Impl: CheckConcludedLicense,
 		},

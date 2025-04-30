@@ -45,7 +45,7 @@ func SBOMHasSPDXVersion(
 	return issues
 }
 
-func SBOMHasDataLicense(
+func SBOMHasCorrectDataLicense(
 	doc *v23.Document,
 	spec string,
 ) []*types.NonConformantField {
@@ -62,7 +62,7 @@ func SBOMHasDataLicense(
 	return issues
 }
 
-func SBOMHasSPDXIdentifier(
+func SBOMHasCorrectSPDXIdentifier(
 	doc *v23.Document,
 	spec string,
 ) []*types.NonConformantField {
