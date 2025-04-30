@@ -34,11 +34,6 @@ type GoogleChecker struct {
 func (googleChecker *GoogleChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			// needs to be updated to check for spdx 2.3
-			Name: "Check that the SBOM has an SPDX version",
-			Impl: common.SBOMHasSPDXVersion,
-		},
-		{
 			Name: "Check that the data license is correct",
 			Impl: common.SBOMHasCorrectDataLicense,
 		},

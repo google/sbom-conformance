@@ -15,6 +15,8 @@
 package base
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -34,14 +36,17 @@ import (
 )
 
 var (
-	errNewChecker = errors.New("the checker has no spec(s). BaseChecker needs at least one spec")
-	errSbomParse  = fmt.Errorf("could not parse SBOM")
+	errNewChecker   = errors.New("the checker has no spec(s). BaseChecker needs at least one spec")
+	ErrSPDXVersion  = errors.New("the SBOM is not SPDX-2.3")
+	ErrParseFailure = errors.New("the SBOM could not be parsed")
 )
 
 // The interface for space checkers.
 type SpecChecker interface {
 	InitChecks()
 
+	// RunTopLevelChecks runs the checkers's top-level checks. The results can be
+	// be retrieved with GetIssues().
 	RunTopLevelChecks(doc *v23.Document)
 	CheckPackages(doc *v23.Document)
 
@@ -79,42 +84,42 @@ func NewChecker(options ...func(*BaseChecker)) (*BaseChecker, error) {
 }
 
 // Initializes the BaseChecker with the input SBOM. After this call, RunChecks()
-// can be called.
-//
-// Note that this method differs in behavior from SetSBOM(sbom io.Reader); it does
-// not return a copy of the receiver.
+// can be called. Existing results stored in the BaseChecker are not reset.
 func (checker *BaseChecker) SetSPDXDocument(sbom *v23.Document) {
 	checker.Document = sbom
 }
 
-// Returns a new BaseChecker with the old BaseCheckers specs
-// and the new SBOM. If the BaseChecker has already run a check
-// on an SBOM, invoking `SetSBOM` will not include those results.
-func (checker *BaseChecker) SetSBOM(sbom io.Reader) (*BaseChecker, error) {
-	newChecker := &BaseChecker{}
-	newChecker.SpecCheckers = checker.SpecCheckers
-	newChecker.TopLevelResults = make([]*util.DeduplicatedIssue, 0)
-	newChecker.PkgResults = make([]*types.PkgResult, 0)
-
-	doc := &v23.Document{}
-	err := jsonParsing.ReadInto(sbom, doc)
-	if err == nil {
-		newChecker.Document = doc
-		return newChecker, nil
+// Initializes the BaseChecker with the input SBOM. After this call, RunChecks()
+// can be called. Existing results stored in the BaseChecker are not reset.
+//
+// An error will be returned if the input is not SPDX 2.3. Use
+// errors.Is(err, base.ErrSPDXVersion) to check for this.
+func (checker *BaseChecker) SetSBOM(sbom io.Reader) error {
+	buf := bytes.Buffer{}
+	_, err := buf.ReadFrom(sbom)
+	if err != nil {
+		return fmt.Errorf("error reading from the sbom: %w", err)
 	}
-
-	err = tagvalue.ReadInto(sbom, doc)
-	if err == nil {
-		newChecker.Document = doc
-		return newChecker, nil
+	doc, err := parseSBOM(buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrParseFailure, err) //nolint:all
 	}
-
-	err = yaml.ReadInto(sbom, doc)
-	if err == nil {
-		newChecker.Document = doc
-		return newChecker, nil
+	if doc.SPDXVersion != "SPDX-2.3" {
+		return fmt.Errorf("%w. The SPDX version is: %v", ErrSPDXVersion, doc.SPDXVersion)
 	}
-	return nil, errSbomParse
+	checker.Document = doc
+	return nil
+}
+
+// parseSBOM parses the input bytes into the SPDX representation.
+//
+// This function is used instead of spdx library json.ReadInto in order to avoid
+// converting the SBOM to other SPDX versions and because the bytes are needed
+// to extract the actual SPDX version.
+func parseSBOM(sbom []byte) (*v23.Document, error) {
+	var doc v23.Document
+	// error is wrapped in SetSBOM
+	return &doc, json.Unmarshal(sbom, &doc) //nolint:wrapcheck
 }
 
 func WithSBOMFile(sbomPath string) func(*BaseChecker) {

@@ -105,7 +105,7 @@ func main() {
 		panic(fmt.Errorf("error opening File: %w", err))
 	}
 	defer file.Close()
-	checker, err = checker.SetSBOM(file)
+	err = checker.SetSBOM(file)
 	if err != nil {
 		panic(err)
 	}

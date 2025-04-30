@@ -5,6 +5,9 @@ A tool to check the conformance of SBOMs to specifications. A checker for the NT
 > [!NOTE]  
 > This library also contains a checker for the Google Style Guide, but it is not yet ready for use.
 
+> [!NOTE]  
+> This library only supports SPDX v2.3 and JSON encoded SBOMs.
+
 ## How to use
 
 sbom-conformance is a library and a CLI.
@@ -33,11 +36,9 @@ import (
 checker := base.NewChecker(base.WithGoogleChecker(),
                            base.WithEOChecker(),
                            base.WithSPDXChecker())
-
+checker.SetSBOM(sbom)
 checker.RunChecks()
-
 results := checker.Results()
-
 ```
 
 You can choose any of the supported specs.
@@ -141,10 +142,6 @@ This is a top-level check that passes if the [Document Namespace](https://spdx.g
 #### Document SPDXID
 
 This is a top-level check that passes if the [Document SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#63-spdx-identifier-field) field is `SPDXRef-DOCUMENT`.
-
-#### SPDX Version
-
-This is a top-level check that passes if the [SPDX Version](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#61-spdx-version-field) is present and conforms to `SPDX-M.N`.
 
 #### Creator
 
