@@ -194,6 +194,10 @@ The Google SBOM Style Guide is similar to the SPDX requirements with a few addit
 
 This is a top-level check that passes if the [Document Name](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#64-document-name-field) field is present and not empty.
 
+#### Document Name
+
+This is a top-level check that passes if the [Document Namespace](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#65-spdx-document-namespace-field) field is present and conforms to `https://spdx.google/<uuid>`.
+
 #### Data License
 
 This is a top-level check that passes if the [Data License](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#62-data-license-field) field is `CC0-1.0`.

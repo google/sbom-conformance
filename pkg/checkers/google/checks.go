@@ -20,8 +20,30 @@ import (
 
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
+	"github.com/google/uuid"
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
+
+const googleDocNamespacePrefix string = "https://spdx.google/"
+
+func SBOMHasGoogleDocumentNamespace(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	// The document namespace should match 'https://spdx.google.com/<uuid>'.
+	after, found := strings.CutPrefix(doc.DocumentNamespace, googleDocNamespacePrefix)
+	if !found || uuid.Validate(after) != nil {
+		issue := types.CreateWrongValueFieldError(
+			types.DocumentNamespace,
+			fmt.Sprintf("%s/<uuid>", googleDocNamespacePrefix),
+			spec,
+		)
+		issues = append(issues, issue)
+		return issues
+	}
+	return issues
+}
 
 // Checks the license information fields.
 func OtherLicensingInformationFields(

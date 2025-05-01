@@ -46,9 +46,8 @@ func (googleChecker *GoogleChecker) InitChecks() {
 			Impl: common.SBOMHasDocumentName,
 		},
 		{
-			// this needs to be updated to check for google specific url
-			Name: "Check that the SBOM has a Document Namespace",
-			Impl: common.SBOMHasValidDocumentNamespace,
+			Name: "Check that the SBOM has a Google Document Namespace",
+			Impl: SBOMHasGoogleDocumentNamespace,
 		},
 		{
 			// this is redundant given the following check
