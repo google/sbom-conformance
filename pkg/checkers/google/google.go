@@ -50,14 +50,12 @@ func (googleChecker *GoogleChecker) InitChecks() {
 			Impl: SBOMHasGoogleDocumentNamespace,
 		},
 		{
-			// this is redundant given the following check
-			Name: "Check that the SBOM has at least one creator",
-			Impl: common.SBOMHasAtLeastOneCreator,
+			Name: "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+			Impl: SBOMHasGoogleCreators,
 		},
 		{
-			// this should be split into separate timestamp and creator checks
-			Name: "Check that the SBOMs creator is formatted correctly",
-			Impl: common.SBOMHasCorrectCreationInfo,
+			Name: "Check that the SBOM's timestamp is conformant",
+			Impl: common.CheckCreatedIsConformant,
 		},
 		// This check needs to be updated. The OtherLicensingInformation section is
 		// not strictly required.

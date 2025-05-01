@@ -34,6 +34,8 @@ var (
 	DocumentNamespace           = "Document Namespace"
 	DocumentName                = "Document Name"
 	Creator                     = "Creator"
+	CreatorTool                 = "Creator Tool"
+	CreatorOrganization         = "Creator Organization"
 	Created                     = "Created"
 	LicenseIdentifier           = "License Identifier"
 	ExtractedText               = "Extracted Text"

@@ -57,6 +57,25 @@ func SBOMHasCorrectDataLicense(
 	return issues
 }
 
+func CheckCreatedIsConformant(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if doc.CreationInfo == nil {
+		issues = append(issues, types.CreateFieldError(types.Created, spec))
+		return issues
+	}
+	// Check that the string is a valid RFC3339 time. However, the RFC allows for
+	// a timezone offset other than UTC, which is not allowed by SPDX. This is
+	// verified by checking that the last character is 'Z'.
+	_, err := time.Parse(time.RFC3339, doc.CreationInfo.Created)
+	if err != nil || !strings.HasSuffix(doc.CreationInfo.Created, "Z") {
+		issues = append(issues, WrongDateFormat(doc, spec))
+	}
+	return issues
+}
+
 func SBOMHasCorrectSPDXIdentifier(
 	doc *v23.Document,
 	spec string,
@@ -130,68 +149,6 @@ func WrongDateFormat(
 		},
 		ReportedBySpec: []string{spec},
 	}
-}
-
-func wrongCreatorName(
-	creator, spec string,
-) *types.NonConformantField {
-	e := fmt.Sprintf("Creator organization is '%s', "+
-		"but should always be 'Google LLC'.",
-		creator)
-	return &types.NonConformantField{
-		Error: &types.FieldError{
-			ErrorType: "formatError",
-			ErrorMsg:  e,
-		},
-		ReportedBySpec: []string{spec},
-	}
-}
-
-func wrongCreatorType(spec string) *types.NonConformantField {
-	e := fmt.Sprintf("Creator type is 'Person', " +
-		"but can only be 'Organization' or 'Tool'.")
-	return &types.NonConformantField{
-		Error: &types.FieldError{
-			ErrorType: "formatError",
-			ErrorMsg:  e,
-		},
-		ReportedBySpec: []string{spec},
-	}
-}
-
-// Checks the SBOMs creation info fields.
-func SBOMHasCorrectCreationInfo(
-	doc *v23.Document,
-	spec string,
-) []*types.NonConformantField {
-	issues := make([]*types.NonConformantField, 0)
-	if doc.CreationInfo == nil {
-		issue := types.CreateFieldError(types.Created, spec)
-		issues = append(issues, issue)
-	} else {
-		if !util.IsValidString(doc.CreationInfo.Created) {
-			issue := types.CreateFieldError(types.Created, spec)
-			issues = append(issues, issue)
-		}
-		_, err := time.Parse(time.RFC3339, doc.CreationInfo.Created)
-		if err != nil {
-			issue := WrongDateFormat(doc, spec)
-			issues = append(issues, issue)
-		}
-		for _, creator := range doc.CreationInfo.Creators {
-			switch creator.CreatorType {
-			case "Organization":
-				if creator.Creator != "Google LLC" {
-					issue := wrongCreatorName(creator.Creator, spec)
-					issues = append(issues, issue)
-				}
-			case "Person":
-				issue := wrongCreatorType(spec)
-				issues = append(issues, issue)
-			}
-		}
-	}
-	return issues
 }
 
 func CheckSPDXID(

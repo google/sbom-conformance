@@ -24,7 +24,50 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
-const googleDocNamespacePrefix string = "https://spdx.google/"
+const (
+	googleDocNamespacePrefix  string = "https://spdx.google/"
+	googleCreatorOrganization string = "Google LLC"
+)
+
+func SBOMHasGoogleCreators(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	if doc.CreationInfo == nil {
+		issues = append(issues, types.CreateFieldError(types.Creator, spec))
+		return issues
+	}
+	var foundTool, foundGoogleCreator, foundPerson bool
+	for _, creator := range doc.CreationInfo.Creators {
+		foundTool = foundTool || creator.CreatorType == "Tool"
+		foundPerson = foundPerson || creator.CreatorType == "Person"
+		foundGoogleCreator = foundGoogleCreator ||
+			(creator.CreatorType == "Organization" && creator.Creator == googleCreatorOrganization)
+	}
+	if !foundTool {
+		issues = append(issues, types.MandatoryPackageFieldError(types.CreatorTool, spec))
+	}
+	if foundPerson {
+		issue := types.NonConformantField{
+			Error: &types.FieldError{
+				ErrorType: "FieldNotAllowed",
+				ErrorMsg:  "The Person creator field is not allowed",
+			},
+			ReportedBySpec: []string{spec},
+		}
+		issues = append(issues, &issue)
+	}
+	if !foundGoogleCreator {
+		issue := types.CreateWrongValueFieldError(
+			types.CreatorTool,
+			fmt.Sprintf("Organization: %s", googleCreatorOrganization),
+			spec,
+		)
+		issues = append(issues, issue)
+	}
+	return issues
+}
 
 func SBOMHasGoogleDocumentNamespace(
 	doc *v23.Document,
