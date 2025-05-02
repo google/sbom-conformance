@@ -36,10 +36,6 @@ type SPDXChecker struct {
 func (spdxChecker *SPDXChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			Name: "Check that the SBOM has a valid SPDX version",
-			Impl: common.SBOMHasSPDXVersion,
-		},
-		{
 			Name: "Check that the data license is correct",
 			Impl: common.SBOMHasCorrectDataLicense,
 		},

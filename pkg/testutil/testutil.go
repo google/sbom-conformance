@@ -16,10 +16,18 @@
 package testutil
 
 import (
+	"fmt"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/sbom-conformance/pkg/checkers/types"
 )
+
+type BadReader struct{}
+
+func (BadReader) Read(p []byte) (int, error) {
+	return 0, fmt.Errorf("BadReader error") //nolint:err113
+}
 
 // FailedTopLevelCheck represents a check that has failed.
 //

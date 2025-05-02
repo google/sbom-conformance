@@ -16,6 +16,7 @@ package base
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -57,7 +58,7 @@ func TestTextSummaryDoesNotCrashWithPercentSignInPackageLevelCheckName(t *testin
 		  "packages": [{"name": "foo", "SPDXID": "SPDXRef-Bar"}]
 		  }
 		`
-	baseChecker, err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
+	err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
 	if err != nil {
 		t.Fatalf("SetSBOM returned err: %v", err)
 	}
@@ -94,7 +95,7 @@ func TestTextSummaryDoesNotCrashWithPercentSignInTopLevelCheckName(t *testing.T)
 		  "name": "SimpleSBOM"
 		  }
 		`
-	baseChecker, err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
+	err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
 	if err != nil {
 		t.Fatalf("SetSBOM returned err: %v", err)
 	}
@@ -106,7 +107,7 @@ func TestTextSummaryDoesNotCrashWithPercentSignInTopLevelCheckName(t *testing.T)
 	}
 }
 
-// Most tests in this file use basechecker.SetSBOM(io.reader). This test exercises
+// Most tests in this file use basechecker.SetSBOM. This test exercises
 // the basechecker.SetSPDXDocument(v23.Document) initialization.
 func TestSetSpdxDocument(t *testing.T) {
 	baseChecker, err := NewChecker(WithEOChecker())
@@ -126,6 +127,17 @@ func TestSetSpdxDocument(t *testing.T) {
 			"len(baseChecker.Results().ErrsAndPacks) == 0, which indicates that no checks were run. The text summary is:\n%s",
 			results.TextSummary,
 		)
+	}
+}
+
+func TestSetSBOMIOFailure(t *testing.T) {
+	baseChecker, err := NewChecker(WithEOChecker())
+	if err != nil {
+		t.Fatalf("NewChecker(WithEOChecker()) returned unexpected error: %v", err)
+	}
+	err = baseChecker.SetSBOM(testutil.BadReader{})
+	if err == nil {
+		t.Errorf("Expected error from SetSBOM, but none was returned")
 	}
 }
 
@@ -459,7 +471,7 @@ func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -476,8 +488,9 @@ func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
 // or they should return more specific errors.
 func TestParseFailure(t *testing.T) {
 	tests := []struct {
-		name string
-		sbom string
+		name     string
+		sbom     string
+		expected error
 	}{
 		{
 			name: "Supplier with invalid format causes parse failure",
@@ -496,12 +509,14 @@ func TestParseFailure(t *testing.T) {
 					}]
 				}]
 			}`,
+			expected: ErrParseFailure,
 		},
 		{
 			name: "Missing spdxVersion causes parse failure",
 			sbom: `{
 				"name": "SimpleSBOM"
 			}`,
+			expected: ErrSPDXVersion,
 		},
 		{
 			name: "Empty spdxVersion causes parse failure",
@@ -509,6 +524,7 @@ func TestParseFailure(t *testing.T) {
 				"name": "SimpleSBOM",
 				"spdxVersion": ""
 			}`,
+			expected: ErrSPDXVersion,
 		},
 		{
 			name: "Invalid spdxVersion causes parse failure",
@@ -516,6 +532,7 @@ func TestParseFailure(t *testing.T) {
 				"name": "SimpleSBOM",
 				"spdxVersion": "SPDX-2.3.1"
 			}`,
+			expected: ErrSPDXVersion,
 		},
 		{
 			name: "Empty package in relationship causes parse failure",
@@ -538,6 +555,7 @@ func TestParseFailure(t *testing.T) {
 					"relatedSpdxElement": "SPDXRef-foo"
 				}]
 			}`,
+			expected: ErrParseFailure,
 		},
 		{
 			name: "SPDXID without SPDXRef prefix fails to parse",
@@ -553,8 +571,9 @@ func TestParseFailure(t *testing.T) {
 								"name": "Foo",
 								"SPDXID": "foo"
 						}
-				],
+				]
 			}`,
+			expected: ErrParseFailure,
 		},
 	}
 	for _, tt := range tests {
@@ -563,9 +582,9 @@ func TestParseFailure(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			_, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
-			if err == nil {
-				t.Fatalf("SetSBOM did not return an error")
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if !errors.Is(err, tt.expected) {
+				t.Fatalf("SetSBOM did not return expected error. Got %v, want %v", err, tt.expected)
 			}
 		})
 	}
@@ -664,7 +683,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -691,7 +710,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 		expected []testutil.FailedTopLevelCheck
 	}{
 		{
-			name: "SPDX version, name, namespace, SPDXID, creator, and timestamp checks pass",
+			name: "SPDX name, namespace, SPDXID, creator, and timestamp checks pass",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -1400,7 +1419,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -1660,7 +1679,7 @@ func TestEOTopLevelChecks(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -1905,7 +1924,7 @@ func TestPackageLevelChecks(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -2206,7 +2225,7 @@ func TestEOPkgResults(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -2568,7 +2587,7 @@ func TestSPDXPkgResults(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewChecker failed with error: %v", err)
 			}
-			checker, err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			err = checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
 			if err != nil {
 				t.Fatalf("SetSBOM returned err: %v", err)
 			}
@@ -2596,7 +2615,7 @@ func TestEOChecker(t *testing.T) {
 		panic(fmt.Errorf("error opening File: %w", err))
 	}
 	defer file.Close()
-	checker, err = checker.SetSBOM(file)
+	err = checker.SetSBOM(file)
 	if err != nil {
 		panic(err)
 	}
@@ -2787,7 +2806,7 @@ func TestGoogleChecker(t *testing.T) {
 		panic(fmt.Errorf("error opening File: %w", err))
 	}
 	defer file.Close()
-	checker, err = checker.SetSBOM(file)
+	err = checker.SetSBOM(file)
 	if err != nil {
 		panic(err)
 	}
@@ -2812,8 +2831,8 @@ func TestGoogleChecker(t *testing.T) {
 		t.Errorf("The 'Google' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["Google"].Conformant)
 	}
-	if results.Summary.SpecSummaries["Google"].PassedChecks != 6 {
-		t.Errorf("The 'Google' spec summary should be PassedChecks=6 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["Google"].PassedChecks != 5 {
+		t.Errorf("The 'Google' spec summary should be PassedChecks=5 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["Google"].PassedChecks)
 	}
 	if len(results.PkgResults) != 4 {
@@ -2950,7 +2969,7 @@ func TestSPDXChecker(t *testing.T) {
 		panic(fmt.Errorf("error opening File: %w", err))
 	}
 	defer file.Close()
-	checker, err = checker.SetSBOM(file)
+	err = checker.SetSBOM(file)
 	if err != nil {
 		panic(err)
 	}

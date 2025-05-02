@@ -39,7 +39,7 @@ func SBOMHasSPDXVersion(
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
 	if doc.SPDXVersion == "" {
-		issue := types.CreateFieldError(types.SPDXVersion, spec)
+		issue := types.CreateWronglyFormattedFieldError(types.SPDXVersion, spec)
 		issues = append(issues, issue)
 	}
 	return issues
@@ -51,13 +51,8 @@ func SBOMHasCorrectDataLicense(
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
 	if doc.DataLicense != "CC0-1.0" {
-		issues = append(issues, &types.NonConformantField{
-			Error: &types.FieldError{
-				ErrorType: "wrongValue",
-				ErrorMsg:  "DataLicense must be CC0-1.0",
-			},
-			ReportedBySpec: []string{spec},
-		})
+		issue := types.CreateWrongValueFieldError(types.DataLicense, "SPDXRef-DOCUMENT", spec)
+		issues = append(issues, issue)
 	}
 	return issues
 }
@@ -68,13 +63,8 @@ func SBOMHasCorrectSPDXIdentifier(
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
 	if doc.SPDXIdentifier != "DOCUMENT" {
-		issues = append(issues, &types.NonConformantField{
-			Error: &types.FieldError{
-				ErrorType: "wrongValue",
-				ErrorMsg:  "SPDXID must be SPDXRef-Document",
-			},
-			ReportedBySpec: []string{spec},
-		})
+		issue := types.CreateWrongValueFieldError(types.SPDXID, "SPDXRef-DOCUMENT", spec)
+		issues = append(issues, issue)
 	}
 	return issues
 }

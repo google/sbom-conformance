@@ -82,6 +82,17 @@ type PkgResult struct {
 	Errors  []*NonConformantField `json:"errors,omitempty"`
 }
 
+func CreateWrongValueFieldError(field, expectedValue, spec string) *NonConformantField {
+	issue := &NonConformantField{
+		Error: &FieldError{
+			ErrorType: "wrongValue",
+			ErrorMsg:  fmt.Sprintf("The field %q should be %q", field, expectedValue),
+		},
+		ReportedBySpec: []string{spec},
+	}
+	return issue
+}
+
 func CreateFieldError(field, spec string) *NonConformantField {
 	issue := &NonConformantField{
 		Error: &FieldError{
