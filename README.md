@@ -158,6 +158,8 @@ This is a top-level check that passes if, for each entry in the [Other Licensing
 - the [License Identifier](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field) field is unique among all entries
 - the [Extracted Text Field](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#102-extracted-text-field) is present and not empty
 
+The licenses are not checked against the [SPDX license list](https://spdx.github.io/spdx-spec/v2.3/SPDX-license-list/).
+
 #### Data License
 
 This is a top-level check that passes if the [Data License](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#62-data-license-field) field is `CC0-1.0`.
@@ -213,6 +215,13 @@ This is a top-level check that passes if the [Creator](https://spdx.github.io/sp
 #### Created
 
 This is a top-level check that passes if the [Created](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#69-created-field) field is present and conforms to `YYYY-MM-DDThh:mm:ssZ`.
+
+#### Other License Information
+
+This is a top-level check that passes if, for each entry in the [Other Licensing Information ](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/) section, all of the following are true:
+- the [License Identifier](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field) field is present and conforms to `LicenseRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`
+- the [License Identifier](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field) field is unique among all entries
+- the [Extracted Text Field](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#102-extracted-text-field) is present and not empty
 
 ## Disclaimer
 

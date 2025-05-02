@@ -67,7 +67,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 			// This check could be lowered to a per-license level, like packages,
 			// but it requires changes to the API and it's probably not a priority.
 			Name: "Check that Other Licensing Information section is conformant",
-			Impl: CheckOtherLicensingInformationSection,
+			Impl: common.CheckOtherLicensingInformationSection,
 		},
 	}
 	spdxChecker.TopLevelChecks = topLevelChecks
