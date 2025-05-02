@@ -602,7 +602,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "https://foo.com",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": ["Organization: Google LLC"],
@@ -611,10 +611,9 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 			}`,
 		},
 		{
-			name: "Google data license, SPDXID, and document name checks fail because they are missing",
+			name: "Google data license, SPDXID, and document name, and document namespace checks fail because they are missing",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
-				"documentNamespace": "https://foo.com",
 				"creationInfo": {
 					"creators": ["Organization: Google LLC"],
 					"created": "2025-04-08T01:25:25Z"
@@ -633,15 +632,19 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 					Name:  "Check that the SBOM has a Document Name",
 					Specs: []string{"Google"},
 				},
+				{
+					Name:  "Check that the SBOM has a Google Document Namespace",
+					Specs: []string{"Google"},
+				},
 			},
 		},
 		{
-			name: "Google data license check fails because it is has the wrong value",
+			name: "Google data license check fails because it has the wrong value",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.1",
 				"name": "SimpleSBOM",
-				"documentNamespace": "https://foo.com",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
 					"creators": ["Organization: Google LLC"],
@@ -656,12 +659,12 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 			},
 		},
 		{
-			name: "Google SPDXID check fails because it is has the wrong value",
+			name: "Google SPDXID check fails because it has the wrong value",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "SimpleSBOM",
-				"documentNamespace": "https://foo.com",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-foo",
 				"creationInfo": {
 					"creators": ["Organization: Google LLC"],
@@ -671,6 +674,66 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 			expected: []testutil.FailedTopLevelCheck{
 				{
 					Name:  "Check that the SBOM has the correct SPDX Identifier",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google Document Namespace check fails because it has the wrong value",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Document Namespace",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google Document Namespace check fails because it has no uuid",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Document Namespace",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google Document Namespace check fails because the uuid is not valid",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Document Namespace",
 					Specs: []string{"Google"},
 				},
 			},
@@ -2831,8 +2894,8 @@ func TestGoogleChecker(t *testing.T) {
 		t.Errorf("The 'Google' spec summary should be Conformant=true but was Conformant=%t\n",
 			results.Summary.SpecSummaries["Google"].Conformant)
 	}
-	if results.Summary.SpecSummaries["Google"].PassedChecks != 5 {
-		t.Errorf("The 'Google' spec summary should be PassedChecks=5 but was PassedChecks=%d\n",
+	if results.Summary.SpecSummaries["Google"].PassedChecks != 4 {
+		t.Errorf("The 'Google' spec summary should be PassedChecks=4 but was PassedChecks=%d\n",
 			results.Summary.SpecSummaries["Google"].PassedChecks)
 	}
 	if len(results.PkgResults) != 4 {
