@@ -66,25 +66,24 @@ func (googleChecker *GoogleChecker) InitChecks() {
 
 	packageLevelChecks := []*types.PackageLevelCheck{
 		{
-			// this needs to be tested
 			Name: "Check that SBOM packages have a name",
 			Impl: common.MustHaveName,
 		},
 		{
-			// this needs to be tested
-			Name: "Check that SBOM packages' ID is correctly formatted",
+			Name: "Check that SBOM packages' ID is present and conformant",
 			Impl: common.CheckSPDXID,
 		},
-		{
-			// this needs to be renamed to CheckPackageSupplier and the implementation simplified.
-			Name: "Check that SBOM packages have specified the supplier as Google",
-			Impl: CheckPackageOriginator,
-		},
-		{
-			// this needs to be updated to check that a custom license text is used
-			Name: "Check that SBOM packages have not left both PackageLicenseConcluded and PackageLicenseInfoFromFiles empty",
-			Impl: CheckConcludedLicense,
-		},
+		//nolint:all
+		//		{
+		//			// this needs to be renamed to CheckPackageSupplier and the implementation simplified.
+		//			Name: "Check that SBOM packages have specified the supplier as Google",
+		//			Impl: CheckPackageOriginator,
+		//		},
+		//		{
+		//			// this needs to be updated to check that a custom license text is used
+		//			Name: "Check that SBOM packages have not left both PackageLicenseConcluded and PackageLicenseInfoFromFiles empty",
+		//			Impl: CheckConcludedLicense,
+		//		},
 	}
 
 	googleChecker.PkgLevelChecks = packageLevelChecks

@@ -223,6 +223,14 @@ This is a top-level check that passes if, for each entry in the [Other Licensing
 - the [License Identifier](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field) field is unique among all entries
 - the [Extracted Text Field](https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#102-extracted-text-field) is present and not empty
 
+#### Package Name
+
+This is a package-level check that passes if the [Name](https://spdx.github.io/spdx-spec/v2.3/package-information/#71-package-name-field) field is present and non-empty.
+
+#### Package SPDXID
+
+This is a package-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is present and conforms to `SPDXRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
