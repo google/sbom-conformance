@@ -73,12 +73,11 @@ func (googleChecker *GoogleChecker) InitChecks() {
 			Name: "Check that SBOM packages' ID is present and conformant",
 			Impl: common.CheckSPDXID,
 		},
+		{
+			Name: "Check that SBOM packages have a valid supplier",
+			Impl: CheckPackageSupplier,
+		},
 		//nolint:all
-		//		{
-		//			// this needs to be renamed to CheckPackageSupplier and the implementation simplified.
-		//			Name: "Check that SBOM packages have specified the supplier as Google",
-		//			Impl: CheckPackageOriginator,
-		//		},
 		//		{
 		//			// this needs to be updated to check that a custom license text is used
 		//			Name: "Check that SBOM packages have not left both PackageLicenseConcluded and PackageLicenseInfoFromFiles empty",

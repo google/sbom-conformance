@@ -2636,7 +2636,8 @@ func TestGooglePkgResults(t *testing.T) {
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
 						"name": "foo",
-						"SPDXID": "SPDXRef-abcXYZ123.-"
+						"SPDXID": "SPDXRef-abcXYZ123.-",
+						"supplier": "Organization: Foo"
 					}]
 				}`,
 			expected: []*types.PkgResult{{
@@ -2645,7 +2646,7 @@ func TestGooglePkgResults(t *testing.T) {
 			}},
 		},
 		{
-			name: "Google package name and SPDXID checks fail because they are empty",
+			name: "Google package name, SPDXID, and supplier checks fail because they are empty",
 			sbom: `{
 					"name": "SimpleSBOM",
 					"spdxVersion": "SPDX-2.3",
@@ -2672,6 +2673,14 @@ func TestGooglePkgResults(t *testing.T) {
 						CheckName:      "Check that SBOM packages' ID is present and conformant",
 						ReportedBySpec: []string{"Google"},
 					},
+					{
+						Error: &types.FieldError{
+							ErrorType: "missingField",
+							ErrorMsg:  "Has no PackageSupplier field",
+						},
+						CheckName:      "Check that SBOM packages have a valid supplier",
+						ReportedBySpec: []string{"Google"},
+					},
 				},
 			}},
 		},
@@ -2683,15 +2692,18 @@ func TestGooglePkgResults(t *testing.T) {
 					"packages": [
 						{
 							"name": "foo",
-							"SPDXID": "SPDXRef-foo_bar"
+							"SPDXID": "SPDXRef-foo_bar",
+							"supplier": "Organization: Foo"
 						},
 						{
 							"name": "bar",
-							"SPDXID": "SPDXRef-foo$bar"
+							"SPDXID": "SPDXRef-foo$bar",
+							"supplier": "Organization: Foo"
 						},
 						{
 							"name": "baz",
-							"SPDXID": "SPDXRef-foo,bar"
+							"SPDXID": "SPDXRef-foo,bar",
+							"supplier": "Organization: Foo"
 						}
 					]
 				}`,
@@ -2739,6 +2751,68 @@ func TestGooglePkgResults(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "Google supplier check fails because the supplier value is empty",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "Organization: "
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageSupplier field",
+					},
+					CheckName:      "Check that SBOM packages have a valid supplier",
+					ReportedBySpec: []string{"Google"},
+				}},
+			}},
+		},
+		{
+			name: "Google supplier check fails because the type is not valid",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "Foo: bar"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Errors: []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "missingField",
+						ErrorMsg:  "Has no PackageSupplier field",
+					},
+					CheckName:      "Check that SBOM packages have a valid supplier",
+					ReportedBySpec: []string{"Google"},
+				}},
+			}},
+		},
+		{
+			name: "Google Supplier check passes for NOASSERTION",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"supplier": "NOASSERTION"
+					}]
+				}`,
+			expected: []*types.PkgResult{{
+				Package: &types.Package{Name: "foo", SpdxID: "foo"},
+				Errors:  []*types.NonConformantField{},
+			}},
 		},
 	}
 	for _, tt := range tests {
@@ -3341,8 +3415,8 @@ func TestGoogleChecker(t *testing.T) {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
 			results.Summary.TotalSBOMPackages)
 	}
-	if results.Summary.FailedSBOMPackages != 1 {
-		t.Errorf("There should be 1 FailedSBOMPackages but the results only had %d\n",
+	if results.Summary.FailedSBOMPackages != 3 {
+		t.Errorf("There should be 3 FailedSBOMPackages but the results only had %d\n",
 			results.Summary.FailedSBOMPackages)
 	}
 	if len(results.Summary.SpecSummaries) != 1 {
@@ -3359,9 +3433,9 @@ func TestGoogleChecker(t *testing.T) {
 	}
 
 	// Check results.Errs.AndPacks
-	if len(results.ErrsAndPacks) != 1 {
+	if len(results.ErrsAndPacks) != 2 {
 		t.Errorf(
-			"The length of results.ErrsAndPacks should be 1 but is %d",
+			"The length of results.ErrsAndPacks should be 2 but is %d",
 			len(results.ErrsAndPacks),
 		)
 	}
@@ -3370,7 +3444,7 @@ func TestGoogleChecker(t *testing.T) {
 		"Package-1",
 		"another package",
 	}
-	if slices.Equal(results.ErrsAndPacks["Has no PackageSupplier field"], expect) {
+	if !slices.Equal(results.ErrsAndPacks["Has no PackageSupplier field"], expect) {
 		t.Error("Wrong")
 	}
 	/*expect = []string{"Package"}

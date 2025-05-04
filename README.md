@@ -231,6 +231,10 @@ This is a package-level check that passes if the [Name](https://spdx.github.io/s
 
 This is a package-level check that passes if the [Package SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/package-information/#72-package-spdx-identifier-field) field is present and conforms to `SPDXRef-<idstring>` where `idstring` only contains letters, numbers, `.`, and/or `-`.
 
+#### Package Supplier
+
+This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is one of `NOASSERTION`, `Organization: ...`, and `Person: ...`.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
