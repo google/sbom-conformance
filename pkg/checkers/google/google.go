@@ -57,12 +57,10 @@ func (googleChecker *GoogleChecker) InitChecks() {
 			Name: "Check that the SBOM's timestamp is conformant",
 			Impl: common.CheckCreatedIsConformant,
 		},
-		// This check needs to be updated. The OtherLicensingInformation section is
-		// not strictly required.
-		//		{
-		//			Name: "Check the SBOMs other licensing fields",
-		//			Impl: OtherLicensingInformationFields,
-		//		},
+		{
+			Name: "Check that Other Licensing Information section is conformant",
+			Impl: common.CheckOtherLicensingInformationSection,
+		},
 	}
 	googleChecker.TopLevelChecks = topLevelChecks
 

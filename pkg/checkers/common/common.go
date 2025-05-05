@@ -33,6 +33,49 @@ import (
 
 const NoAssertion = "NOASSERTION"
 
+func CheckOtherLicensingInformationSection(
+	doc *v23.Document,
+	spec string,
+) []*types.NonConformantField {
+	issues := make([]*types.NonConformantField, 0)
+	licenseIds := map[string]any{}
+	for _, licenseInfo := range doc.OtherLicenses {
+		// https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#102-extracted-text-field
+		// is required
+		if licenseInfo.ExtractedText == "" {
+			issues = append(issues, types.MandatoryPackageFieldError(types.ExtractedText, spec))
+		}
+
+		// https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field
+		// is required, needs a specific format, and should be unique.
+		if licenseInfo.LicenseIdentifier == "" {
+			issues = append(issues, types.MandatoryPackageFieldError(types.LicenseIdentifier, spec))
+			continue
+		}
+		after, found := strings.CutPrefix(licenseInfo.LicenseIdentifier, "LicenseRef-")
+		if !found || len(after) == 0 || !IDStringIsConformant(after) {
+			issues = append(
+				issues,
+				types.CreateWronglyFormattedFieldError(types.LicenseIdentifier, spec),
+			)
+			continue
+		}
+		if _, found := licenseIds[after]; found {
+			issues = append(issues, &types.NonConformantField{
+				Error: &types.FieldError{
+					ErrorType: "uniqueIdViolation",
+					ErrorMsg: fmt.Sprintf(
+						"The License Identifier LicenseRef-%s is not unique",
+						after,
+					),
+				},
+			})
+		}
+		licenseIds[after] = struct{}{}
+	}
+	return issues
+}
+
 func SBOMHasSPDXVersion(
 	doc *v23.Document,
 	spec string,
