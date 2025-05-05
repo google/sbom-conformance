@@ -597,7 +597,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 		expected []testutil.FailedTopLevelCheck
 	}{
 		{
-			name: "Google data license, SPDXID, and document name checks pass",
+			name: "Google data license, SPDXID, document name, document namespace, creator, and created checks pass",
 			sbom: `{
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
@@ -605,19 +605,15 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
 		},
 		{
-			name: "Google data license, SPDXID, and document name, and document namespace checks fail because they are missing",
+			name: "Google data license, SPDXID, and document name, document namespace, creator, and created checks fail because they are missing",
 			sbom: `{
-				"spdxVersion": "SPDX-2.3",
-				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
-					"created": "2025-04-08T01:25:25Z"
-				}
+				"spdxVersion": "SPDX-2.3"
 			}`,
 			expected: []testutil.FailedTopLevelCheck{
 				{
@@ -636,6 +632,14 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 					Name:  "Check that the SBOM has a Google Document Namespace",
 					Specs: []string{"Google"},
 				},
+				{
+					Name:  "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+					Specs: []string{"Google"},
+				},
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
+					Specs: []string{"Google"},
+				},
 			},
 		},
 		{
@@ -647,7 +651,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -667,7 +671,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-foo",
 				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -687,7 +691,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://foo.com/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -707,7 +711,7 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://spdx.google/",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
@@ -727,13 +731,148 @@ func TestGoogleTopLevelChecks(t *testing.T) {
 				"documentNamespace": "https://spdx.google/cf736fd8",
 				"SPDXID": "SPDXRef-DOCUMENT",
 				"creationInfo": {
-					"creators": ["Organization: Google LLC"],
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
 					"created": "2025-04-08T01:25:25Z"
 				}
 			}`,
 			expected: []testutil.FailedTopLevelCheck{
 				{
 					Name:  "Check that the SBOM has a Google Document Namespace",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google creator check fails because the organization is missing",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Tool: some-tool"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google creator check fails because the tool is missing",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google creator check fails because a person creator is provided",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC", "Tool: some-tool", "Person: some-person"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google creator check fails because the organization is wrong",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Foo LLC", "Tool: some-tool"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google creator check passes with two organizations",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC", "Tool: some-tool", "Organization: Foo LLC"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`,
+		},
+		{
+			name: "Google timestamp check fails because it is not UTC",
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
+					"created": "1994-11-05T08:15:30-05:00"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
+					Specs: []string{"Google"},
+				},
+			},
+		},
+		{
+			name: "Google timestamp check fails because UTC is not explicit",
+			// timestamp is missing 'Z' suffix
+			sbom: `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://spdx.google/cf736fd8-ceec-4cb5-b1aa-cb40ef942f18",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Google LLC", "Tool: some-tool"],
+					"created": "2025-04-08T01:25:25"
+				}
+			}`,
+			expected: []testutil.FailedTopLevelCheck{
+				{
+					Name:  "Check that the SBOM's timestamp is conformant",
 					Specs: []string{"Google"},
 				},
 			},

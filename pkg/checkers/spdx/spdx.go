@@ -57,7 +57,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 		},
 		{
 			Name: "Check that the SBOM's timestamp is conformant",
-			Impl: CheckCreatedIsConformant,
+			Impl: common.CheckCreatedIsConformant,
 		},
 		{
 			Name: "Check that the package SPDX identifiers are unique",

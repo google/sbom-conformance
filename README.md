@@ -206,6 +206,14 @@ This is a top-level check that passes if the [Data License](https://spdx.github.
 
 This is a top-level check that passes if the [Document SPDX Identifier](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#63-spdx-identifier-field) field is `SPDXRef-DOCUMENT`.
 
+#### Creator
+
+This is a top-level check that passes if the [Creator](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#68-creator-field) contains an "`Organization: Google LLC` entry, contains a `Tool` entry, and does not contain a `Person` entry.
+
+#### Created
+
+This is a top-level check that passes if the [Created](https://spdx.github.io/spdx-spec/v2.3/document-creation-information/#69-created-field) field is present and conforms to `YYYY-MM-DDThh:mm:ssZ`.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
