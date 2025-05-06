@@ -77,12 +77,10 @@ func (googleChecker *GoogleChecker) InitChecks() {
 			Name: "Check that SBOM packages have a valid supplier",
 			Impl: CheckPackageSupplier,
 		},
-		//nolint:all
-		//		{
-		//			// this needs to be updated to check that a custom license text is used
-		//			Name: "Check that SBOM packages have not left both PackageLicenseConcluded and PackageLicenseInfoFromFiles empty",
-		//			Impl: CheckConcludedLicense,
-		//		},
+		{
+			Name: "Check that SBOM packages' licenses are conformant",
+			Impl: CheckPackageLicenses,
+		},
 	}
 
 	googleChecker.PkgLevelChecks = packageLevelChecks

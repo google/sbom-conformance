@@ -31,7 +31,10 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
-const NoAssertion = "NOASSERTION"
+const (
+	NoAssertion = "NOASSERTION"
+	None        = "NONE"
+)
 
 func CheckOtherLicensingInformationSection(
 	doc *v23.Document,
@@ -49,31 +52,43 @@ func CheckOtherLicensingInformationSection(
 		// https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/#101-license-identifier-field
 		// is required, needs a specific format, and should be unique.
 		if licenseInfo.LicenseIdentifier == "" {
-			issues = append(issues, types.MandatoryPackageFieldError(types.LicenseIdentifier, spec))
+			issue := types.MandatoryPackageFieldError(types.LicenseIdentifier, spec)
+			issues = append(issues, issue)
 			continue
 		}
-		after, found := strings.CutPrefix(licenseInfo.LicenseIdentifier, "LicenseRef-")
-		if !found || len(after) == 0 || !IDStringIsConformant(after) {
-			issues = append(
-				issues,
-				types.CreateWronglyFormattedFieldError(types.LicenseIdentifier, spec),
-			)
+		idString := ExtractLicenseRefIDString(licenseInfo.LicenseIdentifier)
+		if idString == nil {
+			issue := types.CreateWronglyFormattedFieldError(types.LicenseIdentifier, spec)
+			issues = append(issues, issue)
 			continue
 		}
-		if _, found := licenseIds[after]; found {
+		if _, found := licenseIds[*idString]; found {
 			issues = append(issues, &types.NonConformantField{
 				Error: &types.FieldError{
 					ErrorType: "uniqueIdViolation",
 					ErrorMsg: fmt.Sprintf(
 						"The License Identifier LicenseRef-%s is not unique",
-						after,
+						*idString,
 					),
 				},
 			})
 		}
-		licenseIds[after] = struct{}{}
+		licenseIds[*idString] = struct{}{}
 	}
 	return issues
+}
+
+// Extracts the ID string component of a LicenseRef. If if the LicenseRef is not
+// valid, nil is returned. Note that DocumentRefs are not supported by this
+// check.
+//
+// LicenseRef spec: https://spdx.github.io/spdx-spec/v2.3/other-licensing-information-detected/
+func ExtractLicenseRefIDString(licenseRef string) *string {
+	after, found := strings.CutPrefix(licenseRef, "LicenseRef-")
+	if !found || len(after) == 0 || !IDStringIsConformant(after) {
+		return nil
+	}
+	return &after
 }
 
 func SBOMHasSPDXVersion(

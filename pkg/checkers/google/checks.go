@@ -158,43 +158,37 @@ func OtherLicensingInformationFields(
 	return issues
 }
 
-func CheckConcludedLicense(
+func CheckPackageLicenses(
 	sbomPack *v23.Package,
 	spec, checkName string,
 ) []*types.NonConformantField {
+	licenseInfoFromFileValid := func(licenseRef string) bool {
+		return licenseRef == common.None || common.ExtractLicenseRefIDString(licenseRef) != nil
+	}
 	issues := make([]*types.NonConformantField, 0)
-	licenseConcludedExists := true
-	licenseInfoFromFilesExists := true
 
-	if !util.IsValidString(sbomPack.PackageLicenseConcluded) {
-		licenseConcludedExists = false
+	if licenseInfoFromFileValid(sbomPack.PackageLicenseConcluded) {
+		return issues
 	}
-	if len(sbomPack.PackageLicenseInfoFromFiles) == 0 {
-		licenseInfoFromFilesExists = false
+	allLicenseInfoFromFilesValid := true
+	for _, licenseFromFile := range sbomPack.PackageLicenseInfoFromFiles {
+		allLicenseInfoFromFilesValid = allLicenseInfoFromFilesValid &&
+			licenseInfoFromFileValid(licenseFromFile)
 	}
-	for _, liff := range sbomPack.PackageLicenseInfoFromFiles {
-		if strings.ToLower(liff) == "none" {
-			licenseInfoFromFilesExists = false
-		}
+	if len(sbomPack.PackageLicenseInfoFromFiles) > 0 && allLicenseInfoFromFilesValid {
+		return issues
 	}
-	if !licenseConcludedExists && !licenseInfoFromFilesExists {
-		issue := liceseIssue(spec)
-		issue.CheckName = checkName
-		issues = append(issues, issue)
-	}
-	return issues
-}
-
-func liceseIssue(spec string) *types.NonConformantField {
-	e := "has neither Concluded License nor License From Files. " +
-		"Both of these cannot be absent from a package."
-	return &types.NonConformantField{
+	issue := &types.NonConformantField{
 		Error: &types.FieldError{
-			ErrorType: "missingField",
-			ErrorMsg:  e,
+			ErrorType: "licenseError",
+			ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+				"contain references to custom license expressions",
 		},
+		CheckName:      checkName,
 		ReportedBySpec: []string{spec},
 	}
+	issues = append(issues, issue)
+	return issues
 }
 
 func CheckPackageSupplier(

@@ -235,6 +235,10 @@ This is a package-level check that passes if the [Package SPDX Identifier](https
 
 This is a package-level check that passes if the [Package Supplier](https://spdx.github.io/spdx-spec/v2.3/package-information/#75-package-supplier-field) field is one of `NOASSERTION`, `Organization: ...`, and `Person: ...`.
 
+#### Package Licenses
+
+This is a package-level check that passes if either the [Package Concluded License](https://spdx.github.io/spdx-spec/v2.3/package-information/#713-concluded-license-field) field or the [Package License Info From Files](https://spdx.github.io/spdx-spec/v2.3/package-information/#714-all-licenses-information-from-files-field) field is present and contains a reference to custom license text (or more than one, for the latter field). References to licenses in other SPDX documents are not allowed.
+
 ## Disclaimer
 
 This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
