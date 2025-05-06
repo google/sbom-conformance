@@ -2630,28 +2630,45 @@ func TestGooglePkgResults(t *testing.T) {
 		expected []*types.PkgResult
 	}{
 		{
-			name: "Google package name and SPDXID checks pass",
+			name: "Google package name, SPDXID, supplier, and license checks pass",
 			sbom: `{
 					"name": "SimpleSBOM",
 					"spdxVersion": "SPDX-2.3",
-					"packages": [{
-						"name": "foo",
-						"SPDXID": "SPDXRef-abcXYZ123.-",
-						"supplier": "Organization: Foo"
-					}]
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-abcXYZ123.-",
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "LicenseRef-foo"
+						},
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"supplier": "Organization: bar",
+							"licenseInfoFromFiles": ["LicenseRef-foo", "LicenseRef-bar"]
+						}
+					]
 				}`,
-			expected: []*types.PkgResult{{
-				Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
-				Errors:  []*types.NonConformantField{},
-			}},
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+					Errors:  []*types.NonConformantField{},
+				},
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors:  []*types.NonConformantField{},
+				},
+			},
 		},
 		{
-			name: "Google package name, SPDXID, and supplier checks fail because they are empty",
+			name: "Google package name, SPDXID, supplier, and license checks fail because they are empty",
 			sbom: `{
 					"name": "SimpleSBOM",
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
-						"SPDXID": "SPDXRef-"
+						"SPDXID": "SPDXRef-",
+						"licenseConcluded": "",
+						"licenseInfoFromFiles": []
 					}]
 				}`,
 			expected: []*types.PkgResult{{
@@ -2681,6 +2698,15 @@ func TestGooglePkgResults(t *testing.T) {
 						CheckName:      "Check that SBOM packages have a valid supplier",
 						ReportedBySpec: []string{"Google"},
 					},
+					{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					},
 				},
 			}},
 		},
@@ -2693,17 +2719,20 @@ func TestGooglePkgResults(t *testing.T) {
 						{
 							"name": "foo",
 							"SPDXID": "SPDXRef-foo_bar",
-							"supplier": "Organization: Foo"
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "LicenseRef-foo"
 						},
 						{
 							"name": "bar",
 							"SPDXID": "SPDXRef-foo$bar",
-							"supplier": "Organization: Foo"
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "LicenseRef-foo"
 						},
 						{
 							"name": "baz",
 							"SPDXID": "SPDXRef-foo,bar",
-							"supplier": "Organization: Foo"
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "LicenseRef-foo"
 						}
 					]
 				}`,
@@ -2760,7 +2789,8 @@ func TestGooglePkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo",
-						"supplier": "Organization: "
+						"supplier": "Organization: ",
+						"licenseConcluded": "LicenseRef-foo"
 					}]
 				}`,
 			expected: []*types.PkgResult{{
@@ -2783,7 +2813,8 @@ func TestGooglePkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo",
-						"supplier": "Foo: bar"
+						"supplier": "Foo: bar",
+						"licenseConcluded": "LicenseRef-foo"
 					}]
 				}`,
 			expected: []*types.PkgResult{{
@@ -2806,13 +2837,237 @@ func TestGooglePkgResults(t *testing.T) {
 					"packages": [{
 						"name": "foo",
 						"SPDXID": "SPDXRef-foo",
-						"supplier": "NOASSERTION"
+						"supplier": "NOASSERTION",
+						"licenseConcluded": "LicenseRef-foo"
 					}]
 				}`,
 			expected: []*types.PkgResult{{
 				Package: &types.Package{Name: "foo", SpdxID: "foo"},
 				Errors:  []*types.NonConformantField{},
 			}},
+		},
+		{
+			name: "Google license checks pass for NONE",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-abcXYZ123.-",
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "NONE"
+						},
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"supplier": "Organization: bar",
+							"licenseInfoFromFiles": ["NONE"]
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+					Errors:  []*types.NonConformantField{},
+				},
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors:  []*types.NonConformantField{},
+				},
+			},
+		},
+		{
+			name: "Google license checks fail for NOASSERTION",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-abcXYZ123.-",
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "NOASSERTION"
+						},
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"supplier": "Organization: bar",
+							"licenseInfoFromFiles": ["NOASSERTION"]
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+			},
+		},
+		{
+			name: "Google license checks fail for SPDX License List references",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-abcXYZ123.-",
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "CDDL-1.0"
+						},
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"supplier": "Organization: bar",
+							"licenseInfoFromFiles": ["CDDL-1.0"]
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+			},
+		},
+		{
+			name: "Google license checks must pass for all licenseInfoFromFiles",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"supplier": "Organization: bar",
+							"licenseInfoFromFiles": ["NONE", "NOASSERTION"]
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+			},
+		},
+		{
+			name: "Google license check fails for license references from other documents",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-abcXYZ123.-",
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "DocumentRef-foo:LicenseRef"
+						},
+						{
+							"name": "bar",
+							"SPDXID": "SPDXRef-bar",
+							"supplier": "Organization: bar",
+							"licenseInfoFromFiles": ["DocumentRef-foo:LicenseRef"]
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+				{
+					Package: &types.Package{Name: "bar", SpdxID: "bar"},
+					Errors: []*types.NonConformantField{{
+						Error: &types.FieldError{
+							ErrorType: "licenseError",
+							ErrorMsg: "Neither the Concluded License nor the License From Files fields " +
+								"contain references to custom license expressions",
+						},
+						CheckName:      "Check that SBOM packages' licenses are conformant",
+						ReportedBySpec: []string{"Google"},
+					}},
+				},
+			},
+		},
+		{
+			name: "Google license check passes if one license field is conformant",
+			sbom: `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [
+						{
+							"name": "foo",
+							"SPDXID": "SPDXRef-abcXYZ123.-",
+							"supplier": "Organization: Foo",
+							"licenseConcluded": "LicenseRef-foo",
+							"licenseInfoFromFiles": ["NOASSERTION"]
+						}
+					]
+				}`,
+			expected: []*types.PkgResult{
+				{
+					Package: &types.Package{Name: "foo", SpdxID: "abcXYZ123.-"},
+					Errors:  []*types.NonConformantField{},
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -3415,8 +3670,8 @@ func TestGoogleChecker(t *testing.T) {
 		t.Errorf("There should be 4 TotalSBOMPackages but the results only had %d\n",
 			results.Summary.TotalSBOMPackages)
 	}
-	if results.Summary.FailedSBOMPackages != 3 {
-		t.Errorf("There should be 3 FailedSBOMPackages but the results only had %d\n",
+	if results.Summary.FailedSBOMPackages != 4 {
+		t.Errorf("There should be 4 FailedSBOMPackages but the results only had %d\n",
 			results.Summary.FailedSBOMPackages)
 	}
 	if len(results.Summary.SpecSummaries) != 1 {
@@ -3433,9 +3688,9 @@ func TestGoogleChecker(t *testing.T) {
 	}
 
 	// Check results.Errs.AndPacks
-	if len(results.ErrsAndPacks) != 2 {
+	if len(results.ErrsAndPacks) != 3 {
 		t.Errorf(
-			"The length of results.ErrsAndPacks should be 2 but is %d",
+			"The length of results.ErrsAndPacks should be 3 but is %d",
 			len(results.ErrsAndPacks),
 		)
 	}
