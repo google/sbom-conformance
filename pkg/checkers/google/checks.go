@@ -16,8 +16,10 @@ package google
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/google/sbom-conformance/pkg/checkers/common"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 	"github.com/google/uuid"
@@ -195,38 +197,21 @@ func liceseIssue(spec string) *types.NonConformantField {
 	}
 }
 
-func CheckPackageOriginator(
+func CheckPackageSupplier(
 	sbomPack *v23.Package,
 	spec, checkName string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if sbomPack.PackageSupplier == nil ||
-		(sbomPack.PackageSupplier.Supplier == "" ||
-			sbomPack.PackageSupplier.SupplierType == "") {
-		issue := types.MandatoryPackageFieldError(types.
-			PackageSupplier, spec)
-		issue.CheckName = checkName
-		issues = append(issues, issue)
-		return issues
+	supplier := sbomPack.PackageSupplier
+	if supplier != nil {
+		if supplier.Supplier == common.NoAssertion ||
+			(slices.Contains([]string{"Organization", "Person"}, supplier.SupplierType) && supplier.Supplier != "") {
+			return issues
+		}
 	}
-	if strings.ToLower(sbomPack.PackageSupplier.Supplier) == "Google" {
-		issue := wrongSupplier(spec, sbomPack.PackageSupplier.Supplier)
-		issue.CheckName = checkName
-		issues = append(issues, issue)
-	}
+	issue := types.MandatoryPackageFieldError(types.
+		PackageSupplier, spec)
+	issue.CheckName = checkName
+	issues = append(issues, issue)
 	return issues
-}
-
-func wrongSupplier(
-	spec, supplier string,
-) *types.NonConformantField {
-	e := fmt.Sprintf("'Supplier' field in package is '%s'. "+
-		"If Google is the supplier, use 'Google, LLC' as the supplier.", supplier)
-	return &types.NonConformantField{
-		Error: &types.FieldError{
-			ErrorType: "formatError",
-			ErrorMsg:  e,
-		},
-		ReportedBySpec: []string{spec},
-	}
 }
