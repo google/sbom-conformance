@@ -1,9 +1,6 @@
 # sbom-conformance
 
-A tool to check the conformance of SBOMs to specifications. A checker for the NTIA Minimum Elements Specification and SPDX v2.3 requirements is provided with the library.
-
-> [!NOTE]  
-> This library also contains a checker for the Google Style Guide, but it is not yet ready for use.
+A tool to check the conformance of SBOMs to specifications. A checker for the NTIA Minimum Elements Specification, SPDX v2.3 requirements, and the Google style guide is provided with the library.
 
 > [!NOTE]  
 > This library only supports SPDX v2.3 and JSON encoded SBOMs.
@@ -190,7 +187,7 @@ This is a package-level check that passes if either of the following are true:
 
 name: `google`
 
-The Google SBOM Style Guide is similar to the SPDX requirements with a few additional restriction.
+The Google SBOM Style Guide is similar to the SPDX requirements with a few additional restrictions for SBOMs authored by Google.
 
 #### Document Name
 
