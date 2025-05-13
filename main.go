@@ -147,13 +147,13 @@ func main() {
 			var checkLine strings.Builder
 			writeCheckName(check.Name, check.Specs, &checkLine)
 			var symbol string
-			if check.FailedPkgsPercent == float32(0) {
+			if check.FailedPackages == 0 {
 				symbol = greenCheck
 			} else {
 				symbol = redCross
 			}
-			checkLine.WriteString(fmt.Sprintf("%.0f%% packages passed %s\n",
-				100-check.FailedPkgsPercent,
+			checkLine.WriteString(fmt.Sprintf("%d packages failed %s\n",
+				check.FailedPackages,
 				symbol))
 			getChecks.WriteString(checkLine.String())
 		}

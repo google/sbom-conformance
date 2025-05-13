@@ -29,9 +29,9 @@ type TopLevelCheckResult struct {
 }
 
 type PackageLevelCheckResult struct {
-	Name              string   `json:"name"`
-	FailedPkgsPercent float32  `json:"failedPkgsPercent,omitempty"`
-	Specs             []string `json:"specs"`
+	Name           string   `json:"name"`
+	FailedPackages int      `json:"failedPackages,omitempty"`
+	Specs          []string `json:"specs"`
 }
 
 // Output is the type we convert to json when we output the results.
