@@ -21,6 +21,23 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
+const (
+	// top-level checks
+	HasCorrectDataLicense                  = "Check that the data license is correct"
+	HasCorrectDocumentSPDXIdentifier       = "Check that the SBOM has the correct SPDX Identifier"
+	HasDocumentName                        = "Check that the SBOM has a Document Name"
+	HasGoogleDocumentNamespace             = "Check that the SBOM has a Google Document Namespace"
+	HasConformantCreators                  = "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator"
+	HasConformantTimestamp                 = "Check that the SBOM's timestamp is conformant"
+	HasConformantOtherLicensingInformation = "Check that Other Licensing Information section is conformant"
+
+	// package-level checks
+	PackageHasName                 = "Check that SBOM packages have a name"
+	PackageHasConformantSPDXID     = "Check that SBOM packages' ID is present and conformant"
+	PackageSupplierIsValid         = "Check that SBOM packages have a valid supplier"
+	PackageLicenseInfoIsConformant = "Check that SBOM packages' licenses are conformant"
+)
+
 type GoogleChecker struct {
 	Name           string                      `json:"name"`
 	TopLevelChecks []*types.TopLevelCheck      `json:"topLevelChecks"`
@@ -34,31 +51,31 @@ type GoogleChecker struct {
 func (googleChecker *GoogleChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			Name: "Check that the data license is correct",
+			Name: HasCorrectDataLicense,
 			Impl: common.SBOMHasCorrectDataLicense,
 		},
 		{
-			Name: "Check that the SBOM has the correct SPDX Identifier",
+			Name: HasCorrectDocumentSPDXIdentifier,
 			Impl: common.SBOMHasCorrectSPDXIdentifier,
 		},
 		{
-			Name: "Check that the SBOM has a Document Name",
+			Name: HasDocumentName,
 			Impl: common.SBOMHasDocumentName,
 		},
 		{
-			Name: "Check that the SBOM has a Google Document Namespace",
+			Name: HasGoogleDocumentNamespace,
 			Impl: SBOMHasGoogleDocumentNamespace,
 		},
 		{
-			Name: "Check that the SBOM has a Google Creator, a Tool creator, and no Person creator",
+			Name: HasConformantCreators,
 			Impl: SBOMHasGoogleCreators,
 		},
 		{
-			Name: "Check that the SBOM's timestamp is conformant",
+			Name: HasConformantTimestamp,
 			Impl: common.CheckCreatedIsConformant,
 		},
 		{
-			Name: "Check that Other Licensing Information section is conformant",
+			Name: HasConformantOtherLicensingInformation,
 			Impl: common.CheckOtherLicensingInformationSection,
 		},
 	}
@@ -66,19 +83,19 @@ func (googleChecker *GoogleChecker) InitChecks() {
 
 	packageLevelChecks := []*types.PackageLevelCheck{
 		{
-			Name: "Check that SBOM packages have a name",
+			Name: PackageHasName,
 			Impl: common.MustHaveName,
 		},
 		{
-			Name: "Check that SBOM packages' ID is present and conformant",
+			Name: PackageHasConformantSPDXID,
 			Impl: common.CheckSPDXID,
 		},
 		{
-			Name: "Check that SBOM packages have a valid supplier",
+			Name: PackageSupplierIsValid,
 			Impl: CheckPackageSupplier,
 		},
 		{
-			Name: "Check that SBOM packages' licenses are conformant",
+			Name: PackageLicenseInfoIsConformant,
 			Impl: CheckPackageLicenses,
 		},
 	}
