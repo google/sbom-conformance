@@ -179,10 +179,10 @@ func (checker *BaseChecker) ResetResults(spec SpecChecker) {
 	checker.PkgResults = make([]*types.PkgResult, 0)
 }
 
-func (checker *BaseChecker) countFailedPkgPercentage(
+func (checker *BaseChecker) countFailedPackages(
 	checkName string,
 	pkgResults []*types.PkgResult,
-) float32 {
+) int {
 	numberOfFailedPkgs := 0
 	for _, issue := range pkgResults {
 		for _, confError := range issue.Errors {
@@ -191,14 +191,7 @@ func (checker *BaseChecker) countFailedPkgPercentage(
 			}
 		}
 	}
-	var failedPercentage float32
-	if numberOfFailedPkgs == 0 {
-		failedPercentage = 0
-	} else {
-		failedPercentage = float32(numberOfFailedPkgs) / float32(checker.NumberOfSBOMPackages())
-		failedPercentage *= 100
-	}
-	return failedPercentage
+	return numberOfFailedPkgs
 }
 
 func (checker *BaseChecker) checkIsTopLvl(checkName string) bool {
@@ -274,9 +267,9 @@ func (checker *BaseChecker) GetPackageLevelChecks() []*types.PackageLevelCheckRe
 	var result []*types.PackageLevelCheckResult
 	for checkName, specs := range checksToSpecifications {
 		topLevelCheckResult := types.PackageLevelCheckResult{
-			Name:              checkName,
-			FailedPkgsPercent: checker.countFailedPkgPercentage(checkName, checker.PkgResults),
-			Specs:             specs,
+			Name:           checkName,
+			FailedPackages: checker.countFailedPackages(checkName, checker.PkgResults),
+			Specs:          specs,
 		}
 		result = append(result, &topLevelCheckResult)
 	}
