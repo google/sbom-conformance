@@ -21,6 +21,24 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
+const (
+	// top-level checks
+	HasCorrectDataLicense                  = "Check that the data license is correct"
+	HasCorrectDocumentSPXIdentifier        = "Check that the SBOM has the correct SPDXIdentifier"
+	HasDocumentName                        = "Check that the SBOM has a Document Name"
+	HasConformantDocumentNamespace         = "Check that the SBOM has a valid Document Namespace"
+	HasConformantCreators                  = "Check that the SBOM has at least one creator and that they are formatted correctly"
+	HasConformantTimestamp                 = "Check that the SBOM's timestamp is conformant"
+	HasUniqueSPDXIdentifiers               = "Check that the package SPDX identifiers are unique"
+	HasConformantOtherLicensingInformation = "Check that Other Licensing Information section is conformant"
+
+	// package-level checks
+	PackageHasName                   = "Check that SBOM packages have a name"
+	PackageHasConformantSPDXID       = "Check that SBOM packages' ID is present and conformant"
+	PackageFilesAnalyzedIsConformant = "Check that SBOM packages' filesAnalyzed is true if packageVerificationCode is present"
+	PackageHasDownloadLocation       = "Check that SBOM packages have a download location"
+)
+
 type SPDXChecker struct {
 	Name           string                     `json:"name"`
 	TopLevelChecks []*types.TopLevelCheck     `json:"topLevelChecks"`
@@ -36,37 +54,37 @@ type SPDXChecker struct {
 func (spdxChecker *SPDXChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			Name: "Check that the data license is correct",
+			Name: HasCorrectDataLicense,
 			Impl: common.SBOMHasCorrectDataLicense,
 		},
 		{
-			Name: "Check that the SBOM has the correct SPDXIdentifier",
+			Name: HasCorrectDocumentSPXIdentifier,
 			Impl: common.SBOMHasCorrectSPDXIdentifier,
 		},
 		{
-			Name: "Check that the SBOM has a Document Name",
+			Name: HasDocumentName,
 			Impl: common.SBOMHasDocumentName,
 		},
 		{
-			Name: "Check that the SBOM has a valid Document Namespace",
+			Name: HasConformantDocumentNamespace,
 			Impl: common.SBOMHasValidDocumentNamespace,
 		},
 		{
-			Name: "Check that the SBOM has at least one creator and that they are formatted correctly",
+			Name: HasConformantCreators,
 			Impl: CheckCreatorIsConformant,
 		},
 		{
-			Name: "Check that the SBOM's timestamp is conformant",
+			Name: HasConformantTimestamp,
 			Impl: common.CheckCreatedIsConformant,
 		},
 		{
-			Name: "Check that the package SPDX identifiers are unique",
+			Name: HasUniqueSPDXIdentifiers,
 			Impl: CheckUniqueSPDXIdentifier,
 		},
 		{
 			// This check could be lowered to a per-license level, like packages,
 			// but it requires changes to the API and it's probably not a priority.
-			Name: "Check that Other Licensing Information section is conformant",
+			Name: HasConformantOtherLicensingInformation,
 			Impl: common.CheckOtherLicensingInformationSection,
 		},
 	}
@@ -74,19 +92,19 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 
 	packageLevelChecks := []*types.PackageLevelCheck{
 		{
-			Name: "Check that SBOM packages have a name",
+			Name: PackageHasName,
 			Impl: common.MustHaveName,
 		},
 		{
-			Name: "Check that SBOM packages' ID is present and conformant",
+			Name: PackageHasConformantSPDXID,
 			Impl: common.CheckSPDXID,
 		},
 		{
-			Name: "Check that SBOM packages' filesAnalyzed is true if packageVerificationCode is present",
+			Name: PackageFilesAnalyzedIsConformant,
 			Impl: CheckFilesAnalyzed,
 		},
 		{
-			Name: "Check that SBOM packages have a download location",
+			Name: PackageHasDownloadLocation,
 			Impl: CheckDownloadLocation,
 		},
 	}
