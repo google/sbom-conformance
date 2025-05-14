@@ -21,6 +21,7 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
+//nolint:lll
 const (
 	// top-level checks.
 	HasCorrectDataLicense                  = "Check that the data license is correct"
