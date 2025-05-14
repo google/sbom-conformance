@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	// top-level checks
+	// top-level checks.
 	HasCorrectDataLicense                  = "Check that the data license is correct"
 	HasCorrectDocumentSPXIdentifier        = "Check that the SBOM has the correct SPDXIdentifier"
 	HasDocumentName                        = "Check that the SBOM has a Document Name"
@@ -32,7 +32,7 @@ const (
 	HasUniqueSPDXIdentifiers               = "Check that the package SPDX identifiers are unique"
 	HasConformantOtherLicensingInformation = "Check that Other Licensing Information section is conformant"
 
-	// package-level checks
+	// package-level checks.
 	PackageHasName                   = "Check that SBOM packages have a name"
 	PackageHasConformantSPDXID       = "Check that SBOM packages' ID is present and conformant"
 	PackageFilesAnalyzedIsConformant = "Check that SBOM packages' filesAnalyzed is true if packageVerificationCode is present"
