@@ -21,6 +21,19 @@ import (
 	v23 "github.com/spdx/tools-golang/spdx/v2/v2_3"
 )
 
+const (
+	// top-level checks.
+	HasAtLeastOneCreator = "Check that the SBOM has at least one creator"
+	HasTimestamp         = "Check that the SBOM has a timestamp"
+	HasRelationships     = "Check that each SBOM package has a relationship"
+
+	// package-level checks.
+	PackageHasName              = "Check that SBOM packages have a name"
+	PackageHasValidVersion      = "Check that SBOM packages have a valid version"
+	PackageHasSupplier          = "Check that the package has a supplier"
+	PackageHasExternalReference = "Check that SBOM packages have external references"
+)
+
 type EOChecker struct {
 	Name           string                      `json:"name"`
 	TopLevelChecks []*types.TopLevelCheck      `json:"topLevelChecks"`
@@ -34,15 +47,15 @@ type EOChecker struct {
 func (eoChecker *EOChecker) InitChecks() {
 	topLevelChecks := []*types.TopLevelCheck{
 		{
-			Name: "Check that the SBOM has at least one creator",
+			Name: HasAtLeastOneCreator,
 			Impl: common.SBOMHasAtLeastOneCreator,
 		},
 		{
-			Name: "Check that the SBOM has a timestamp",
+			Name: HasTimestamp,
 			Impl: MustHaveTimestamp,
 		},
 		{
-			Name: "Check that each SBOM package has a relationship",
+			Name: HasRelationships,
 			Impl: checkPackagesHaveRelationships,
 		},
 	}
@@ -50,19 +63,19 @@ func (eoChecker *EOChecker) InitChecks() {
 
 	packageLevelChecks := []*types.PackageLevelCheck{
 		{
-			Name: "Check that SBOM packages have a name",
+			Name: PackageHasName,
 			Impl: common.MustHaveName,
 		},
 		{
-			Name: "Check that SBOM packages have a valid version",
+			Name: PackageHasValidVersion,
 			Impl: MustHaveValidVersion,
 		},
 		{
-			Name: "Check that the package has a supplier",
+			Name: PackageHasSupplier,
 			Impl: MustHaveSupplier,
 		},
 		{
-			Name: "Check that SBOM packages have external references",
+			Name: PackageHasExternalReference,
 			Impl: MustHaveExternalReferences,
 		},
 	}
