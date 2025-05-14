@@ -81,7 +81,7 @@ func SBOMHasGoogleDocumentNamespace(
 	if !found || uuid.Validate(after) != nil {
 		issue := types.CreateWrongValueFieldError(
 			types.DocumentNamespace,
-			fmt.Sprintf("%s/<uuid>", googleDocNamespacePrefix),
+			fmt.Sprintf("%s<uuid>", googleDocNamespacePrefix),
 			spec,
 		)
 		issues = append(issues, issue)
