@@ -49,10 +49,24 @@ var FailedTopLevelCheckOpts []cmp.Option = []cmp.Option{
 	cmpopts.SortSlices(lessTopLevelCheck),
 }
 
+var PkgResultsOpts []cmp.Option = []cmp.Option{
+	cmpopts.EquateEmpty(),
+	cmpopts.SortSlices(func(package1, package2 *types.PkgResult) bool {
+		return package1.Package.SpdxID < package2.Package.SpdxID
+	}),
+	cmpopts.SortSlices(func(error1, error2 *types.NonConformantField) bool {
+		// All errors with the same ErrorMsg should have the same ErrorType
+		return error1.Error.ErrorMsg < error2.Error.ErrorMsg
+	}),
+	cmpopts.SortSlices(func(s1, s2 string) bool { return s1 < s2 }),
+}
+
 // ExtractFailedTopLevelChecks returns the failed checks in the input.
-func ExtractFailedTopLevelChecks(topLeveChecks []*types.TopLevelCheckResult) []FailedTopLevelCheck {
+func ExtractFailedTopLevelChecks(
+	topLevelChecks []*types.TopLevelCheckResult,
+) []FailedTopLevelCheck {
 	failedChecks := []FailedTopLevelCheck{}
-	for _, check := range topLeveChecks {
+	for _, check := range topLevelChecks {
 		if !check.Passed {
 			failedChecks = append(failedChecks, FailedTopLevelCheck{
 				Name:  check.Name,
