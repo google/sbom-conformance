@@ -32,8 +32,9 @@ import (
 )
 
 const (
-	NoAssertion = "NOASSERTION"
-	None        = "NONE"
+	NoAssertion         = "NOASSERTION"
+	None                = "NONE"
+	requiredDataLicense = "CC0-1.0"
 )
 
 func CheckOtherLicensingInformationSection(
@@ -108,8 +109,8 @@ func SBOMHasCorrectDataLicense(
 	spec string,
 ) []*types.NonConformantField {
 	issues := make([]*types.NonConformantField, 0)
-	if doc.DataLicense != "CC0-1.0" {
-		issue := types.CreateWrongValueFieldError(types.DataLicense, "SPDXRef-DOCUMENT", spec)
+	if doc.DataLicense != requiredDataLicense {
+		issue := types.CreateWrongValueFieldError(types.DataLicense, requiredDataLicense, spec)
 		issues = append(issues, issue)
 	}
 	return issues
