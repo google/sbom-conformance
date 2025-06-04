@@ -601,7 +601,7 @@ func deduplicatePackageResults(mergedPacks []*types.PkgResult) []*types.PkgResul
 		for _, err := range pack.Errors {
 			hasDuplicateError := false
 			for _, e := range cleanedErrors {
-				if err.Error.ErrorMsg == e.Error.ErrorMsg {
+				if err.Error.ErrorMsg == e.Error.ErrorMsg && err.CheckName == e.CheckName {
 					// Only add the spec if we haven't already. Otherwise, there
 					// might be package results with duplicate specs
 					if !slices.Contains(e.ReportedBySpec, err.ReportedBySpec[0]) {

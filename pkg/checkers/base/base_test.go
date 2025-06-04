@@ -147,6 +147,149 @@ func TestSummary(t *testing.T) {
 	}
 }
 
+func TestPackageLevelChecksWithSameErrorMessageButDifferentNamesNotDeduped(t *testing.T) {
+	// all SPDX checks should pass here
+	sbom := `{
+					"name": "SimpleSBOM",
+					"spdxVersion": "SPDX-2.3",
+					"packages": [{
+						"name": "foo",
+						"SPDXID": "SPDXRef-foo",
+						"downloadLocation": "foo.com"
+					}]
+				}`
+	baseChecker := &BaseChecker{}
+	err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
+	if err != nil {
+		t.Fatalf("SetSBOM returned err: %v", err)
+	}
+	spdxChecker := spdx.SPDXChecker{Name: types.SPDX}
+	spdxChecker.PkgLevelChecks = []*types.PackageLevelCheck{
+		{
+			Name: "a_name",
+			Impl: func(sbomPackage *v23.Package, spec, checkName string) []*types.NonConformantField {
+				return []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "does_not_matter",
+						ErrorMsg:  "duplicate_message",
+					},
+					CheckName:      checkName,
+					ReportedBySpec: []string{spec},
+				}}
+			},
+		},
+		{
+			Name: "some_other_name",
+			Impl: func(sbomPackage *v23.Package, spec, checkName string) []*types.NonConformantField {
+				return []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "does_not_matter",
+						ErrorMsg:  "duplicate_message",
+					},
+					CheckName:      checkName,
+					ReportedBySpec: []string{spec},
+				}}
+			},
+		},
+	}
+
+	baseChecker.AddSpec(&spdxChecker)
+	baseChecker.RunChecks()
+	results := baseChecker.Results()
+
+	want := []*types.PkgResult{{
+		Package: &types.Package{Name: "foo", SpdxID: "foo"},
+		Errors: []*types.NonConformantField{
+			{
+				Error: &types.FieldError{
+					ErrorType: "does_not_matter",
+					ErrorMsg:  "duplicate_message",
+				},
+				CheckName:      "a_name",
+				ReportedBySpec: []string{"SPDX"},
+			},
+			{
+				Error: &types.FieldError{
+					ErrorType: "does_not_matter",
+					ErrorMsg:  "duplicate_message",
+				},
+				CheckName:      "some_other_name",
+				ReportedBySpec: []string{"SPDX"},
+			},
+		},
+	}}
+	if diff := cmp.Diff(want, results.PkgResults); diff != "" {
+		t.Errorf("Encountered results.TopLevelChecks diff (-want +got):\n%s", diff)
+	}
+}
+
+func TestTopLevelChecksWithSameErrorMessageButDifferentNamesNotDeduped(t *testing.T) {
+	// all SPDX checks should pass here
+	sbom := `{
+				"spdxVersion": "SPDX-2.3",
+				"dataLicense": "CC0-1.0",
+				"name": "SimpleSBOM",
+				"documentNamespace": "https://foo.com",
+				"SPDXID": "SPDXRef-DOCUMENT",
+				"creationInfo": {
+					"creators": ["Organization: Foo LLC (foo@bar.com)", "Tool: tool-v5"],
+					"created": "2025-04-08T01:25:25Z"
+				}
+			}`
+	baseChecker := &BaseChecker{}
+	err := baseChecker.SetSBOM(bytes.NewReader([]byte(sbom)))
+	if err != nil {
+		t.Fatalf("SetSBOM returned err: %v", err)
+	}
+	spdxChecker := spdx.SPDXChecker{Name: types.SPDX}
+	spdxChecker.TopLevelChecks = []*types.TopLevelCheck{
+		{
+			Name: "a_name",
+			Impl: func(doc *v23.Document, spec string) []*types.NonConformantField {
+				return []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "does_not_matter",
+						ErrorMsg:  "duplicate_message",
+					},
+					ReportedBySpec: []string{spec},
+				}}
+			},
+		},
+		{
+			Name: "a_different_name",
+			Impl: func(doc *v23.Document, spec string) []*types.NonConformantField {
+				return []*types.NonConformantField{{
+					Error: &types.FieldError{
+						ErrorType: "does_not_matter",
+						ErrorMsg:  "duplicate_message",
+					},
+					ReportedBySpec: []string{spec},
+				}}
+			},
+		},
+	}
+
+	baseChecker.AddSpec(&spdxChecker)
+	baseChecker.RunChecks()
+	failedTopLevelChecks := testutil.ExtractFailedTopLevelChecks(
+		baseChecker.Results().TopLevelChecks,
+	)
+
+	want := []testutil.FailedTopLevelCheck{
+		{
+			Name:  "a_name",
+			Specs: []string{types.SPDX},
+		},
+		{
+			Name:  "a_different_name",
+			Specs: []string{types.SPDX},
+		},
+	}
+	if diff := cmp.Diff(want, failedTopLevelChecks, testutil.FailedTopLevelCheckOpts...); diff != "" {
+		t.Errorf("Encountered results.TopLevelChecks diff (-want +got):\n%s", diff)
+	}
+}
+
 // Most tests in this file use basechecker.SetSBOM. This test exercises
 // the basechecker.SetSPDXDocument(v23.Document) initialization.
 func TestSetSpdxDocument(t *testing.T) {
@@ -491,20 +634,6 @@ func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
 		},
 	}
 
-	lessPkgResult := func(package1, package2 *types.PkgResult) bool {
-		return package1.Package.SpdxID < package2.Package.SpdxID
-	}
-	lessFieldError := func(error1, error2 *types.NonConformantField) bool {
-		// All errors with the same ErrorMsg should have the same ErrorType
-		return error1.Error.ErrorMsg < error2.Error.ErrorMsg
-	}
-	lessReportedBySpec := func(s1, s2 string) bool { return s1 < s2 }
-	opts := cmp.Options{
-		cmpopts.SortSlices(lessPkgResult),
-		cmpopts.SortSlices(lessFieldError),
-		cmpopts.SortSlices(lessReportedBySpec),
-	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			checker, err := NewChecker(tt.specs...)
@@ -517,7 +646,7 @@ func TestPkgResultsForMultiplePackagesAndErrorsAndSpecs(t *testing.T) {
 			}
 
 			checker.RunChecks()
-			if diff := cmp.Diff(tt.expected, checker.Results().PkgResults, opts); diff != "" {
+			if diff := cmp.Diff(tt.expected, checker.Results().PkgResults, testutil.PkgResultsOpts...); diff != "" {
 				t.Errorf("Encountered checker.Results() diff (-want +got):\n%s", diff)
 			}
 		})

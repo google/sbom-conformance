@@ -63,7 +63,7 @@ func alreadyDeduplicated(
 	deduplicatedIssues []*DeduplicatedIssue,
 ) bool {
 	for _, iss := range deduplicatedIssues {
-		if iss.ErrorMessage == issue.Error.ErrorMsg {
+		if iss.ErrorMessage == issue.Error.ErrorMsg && iss.CheckName == issue.CheckName {
 			return true
 		}
 	}
