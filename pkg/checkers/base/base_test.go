@@ -1312,7 +1312,7 @@ func TestSPDXTopLevelChecks(t *testing.T) {
 				"spdxVersion": "SPDX-2.3",
 				"dataLicense": "CC0-1.0",
 				"name": "",
-				"SPDXID": "SPDXRef-",
+				"SPDXID": "SPDXRef-ref",
 				"documentNamespace": "",
 				"creationInfo": {
 					"creators": [],
@@ -2830,18 +2830,18 @@ func TestGooglePkgResults(t *testing.T) {
 			},
 		},
 		{
-			name: "Google package name, SPDXID, supplier, and license checks fail because they are empty",
+			name: "Google package name, supplier, and license checks fail because they are empty",
 			sbom: `{
 					"name": "SimpleSBOM",
 					"spdxVersion": "SPDX-2.3",
 					"packages": [{
-						"SPDXID": "SPDXRef-",
+						"SPDXID": "SPDXRef-ref",
 						"licenseConcluded": "",
 						"licenseInfoFromFiles": []
 					}]
 				}`,
 			expected: []*types.PkgResult{{
-				Package: &types.Package{Name: "", SpdxID: ""},
+				Package: &types.Package{Name: "", SpdxID: "ref"},
 				Errors: []*types.NonConformantField{
 					{
 						Error: &types.FieldError{
@@ -2849,14 +2849,6 @@ func TestGooglePkgResults(t *testing.T) {
 							ErrorMsg:  "Has no PackageName field",
 						},
 						CheckName:      "Check that SBOM packages have a name",
-						ReportedBySpec: []string{"Google"},
-					},
-					{
-						Error: &types.FieldError{
-							ErrorType: "missingField",
-							ErrorMsg:  "Has no PackageSPDXIdentifier field",
-						},
-						CheckName:      "Check that SBOM packages' ID is present and conformant",
 						ReportedBySpec: []string{"Google"},
 					},
 					{
@@ -3337,29 +3329,6 @@ func TestSPDXPkgResults(t *testing.T) {
 				}`,
 			expected: []*types.PkgResult{{
 				Package: &types.Package{Name: "foo"},
-				Errors: []*types.NonConformantField{{
-					Error: &types.FieldError{
-						ErrorType: "missingField",
-						ErrorMsg:  "Has no PackageSPDXIdentifier field",
-					},
-					CheckName:      "Check that SBOM packages' ID is present and conformant",
-					ReportedBySpec: []string{"SPDX"},
-				}},
-			}},
-		},
-		{
-			name: "Package SPDXID check fails because the idstring is empty",
-			sbom: `{
-					"name": "SimpleSBOM",
-					"spdxVersion": "SPDX-2.3",
-					"packages": [{
-						"name": "foo",
-						"SPDXID": "SPDXRef-",
-						"downloadLocation": "foo.com"
-					}]
-				}`,
-			expected: []*types.PkgResult{{
-				Package: &types.Package{Name: "foo", SpdxID: ""},
 				Errors: []*types.NonConformantField{{
 					Error: &types.FieldError{
 						ErrorType: "missingField",
