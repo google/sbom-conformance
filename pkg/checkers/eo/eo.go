@@ -84,7 +84,7 @@ func (eoChecker *EOChecker) InitChecks() {
 
 func (eoChecker *EOChecker) RunTopLevelChecks(doc *v23.Document) {
 	for _, check := range eoChecker.TopLevelChecks {
-		issues := check.Impl(doc, types.EO)
+		issues := check.Impl(doc, eoChecker.Name)
 		for _, issue := range issues {
 			issue.CheckName = check.Name
 		}
