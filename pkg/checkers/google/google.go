@@ -106,7 +106,7 @@ func (googleChecker *GoogleChecker) InitChecks() {
 
 func (googleChecker *GoogleChecker) RunTopLevelChecks(doc *v23.Document) {
 	for _, check := range googleChecker.TopLevelChecks {
-		issues := check.Impl(doc, types.Google)
+		issues := check.Impl(doc, googleChecker.Name)
 		for _, issue := range issues {
 			issue.CheckName = check.Name
 		}

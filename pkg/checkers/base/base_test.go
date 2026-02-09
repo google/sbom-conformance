@@ -26,6 +26,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/sbom-conformance/pkg/checkers/eo"
+	"github.com/google/sbom-conformance/pkg/checkers/google"
 	"github.com/google/sbom-conformance/pkg/checkers/spdx"
 	types "github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/testutil"
@@ -3890,5 +3892,96 @@ func TestSPDXChecker(t *testing.T) {
 			"There should be zero SBOM issues but there are %d\n",
 			len(results.PkgResults[3].Errors),
 		)
+	}
+}
+
+func TestBaseCheckerResultsReportCorrectSpecName(t *testing.T) {
+	sbom := `
+	{
+		"spdxVersion": "SPDX-2.3",
+		"name": "SimpleSBOM",
+		"packages": [{
+			"name": "Foo",
+			"SPDXID": "SPDXRef-foo"
+		}]
+	}`
+
+	tests := []struct {
+		name     string
+		checker  SpecChecker
+		sbom     string
+		wantSpec string
+	}{
+		{
+			name: "EO checker reports correct spec name in issues",
+			checker: &eo.EOChecker{
+				Name:   "CustomEO",
+				Issues: make([]*types.NonConformantField, 0),
+			},
+			sbom:     sbom,
+			wantSpec: "CustomEO",
+		},
+		{
+			name: "Google checker reports correct spec name in issues",
+			checker: &google.GoogleChecker{
+				Name:   "CustomGoogle",
+				Issues: make([]*types.NonConformantField, 0),
+			},
+			sbom:     sbom,
+			wantSpec: "CustomGoogle",
+		},
+		{
+			name: "SPDX checker reports correct spec name in issues",
+			checker: &spdx.SPDXChecker{
+				Name:   "CustomSPDX",
+				Issues: make([]*types.NonConformantField, 0),
+			},
+			sbom:     sbom,
+			wantSpec: "CustomSPDX",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.checker.InitChecks()
+			checker := &BaseChecker{}
+			checker.AddSpec(tt.checker)
+
+			err := checker.SetSBOM(bytes.NewReader([]byte(tt.sbom)))
+			if err != nil {
+				t.Fatalf("SetSBOM returned err: %v", err)
+			}
+
+			checker.RunChecks()
+
+			// Sanity check that checks failed
+			if len(checker.TopLevelResults) == 0 && len(checker.PkgResults) == 0 {
+				t.Fatalf(
+					"Expected TopLevelResults and PkgResults, got: len(TopLevelResults): %v, len(PkgResults): %v",
+					len(checker.TopLevelResults),
+					len(checker.PkgResults),
+				)
+			}
+			for _, issue := range checker.TopLevelResults {
+				if !slices.Contains(issue.NonConformantWithSpecs, tt.wantSpec) {
+					t.Errorf(
+						"Issue %s failed, expected spec %s, got %v",
+						issue.CheckName,
+						tt.wantSpec,
+						issue.NonConformantWithSpecs,
+					)
+				}
+			}
+			for _, pkgResult := range checker.PkgResults {
+				for _, pkgError := range pkgResult.Errors {
+					if diff := cmp.Diff([]string{tt.wantSpec}, pkgError.ReportedBySpec); diff != "" {
+						t.Errorf(
+							"Encountered checker.PkgResults.Errors.ReportedBySpec diff (-want +got):\n%s",
+							diff,
+						)
+					}
+				}
+			}
+		})
 	}
 }

@@ -115,7 +115,7 @@ func (spdxChecker *SPDXChecker) InitChecks() {
 
 func (spdxChecker *SPDXChecker) RunTopLevelChecks(doc *v23.Document) {
 	for _, check := range spdxChecker.TopLevelChecks {
-		issues := check.Impl(doc, types.SPDX)
+		issues := check.Impl(doc, spdxChecker.Name)
 		for _, issue := range issues {
 			issue.CheckName = check.Name
 		}
