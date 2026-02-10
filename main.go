@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/google/sbom-conformance/pkg/checkers/base"
+	"github.com/google/sbom-conformance/pkg/checkers/types"
 	"github.com/google/sbom-conformance/pkg/util"
 )
 
@@ -37,7 +38,7 @@ var (
 	flagSpec = flag.String(
 		"specs",
 		"all",
-		"The specs to check. Options are: 'google', 'eo', 'spdx', 'all' (default).",
+		fmt.Sprintf("The specs to check. Options are: %q", validSpecs),
 	)
 	flagPackages = flag.Bool(
 		"packages",
@@ -45,7 +46,7 @@ var (
 		"List the packages that failed checks",
 	)
 	flagGetChecks    = flag.Bool("get-checks", false, "Print the checks in the analysis")
-	validSpecs       = []string{"google", "eo", "spdx", "all"}
+	validSpecs       = []string{strings.ToLower(types.Google), strings.ToLower(types.EO), strings.ToLower(types.SPDX), "all"}
 	greenCheckHex, _ = strconv.ParseInt("0x00002705", 0, 32)
 	greenCheck       = html.UnescapeString(fmt.Sprint(rune(greenCheckHex)))
 	redCrossHex, _   = strconv.ParseInt("0x0000274C", 0, 32)
